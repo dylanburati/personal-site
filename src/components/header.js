@@ -38,10 +38,10 @@ const Header = (props) => {
           if(ThisIcon == null) {
             content = link.text;
           } else {
-            content = <ThisIcon className="stroke-current" style={{fill: 'transparent'}} />
+            content = <ThisIcon className="stroke-current" style={{fill: 'transparent'}} title="" />
           }
           return (
-            <a key={link.href} className="text-gray-400 hover:text-white ml-4" href={link.href}>
+            <a key={link.href} title={link.text} className="text-gray-400 hover:text-white ml-4" href={link.href}>
               {content}
             </a>
           );

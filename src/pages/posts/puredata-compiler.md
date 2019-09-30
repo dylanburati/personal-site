@@ -175,9 +175,9 @@ function forced me to think about possible design issues.
 
 Since having a type system was so beneficial in writing this compiler, I think
 it would be nice to implement one for PureData, which often generates type
-errors like "signal outlet connect to nonsignal inlet". This would be difficult
-though, because the number of inlets or outlets an object has can change based
-on its text content.
+errors like "signal outlet connected to nonsignal inlet". This would be
+difficult though, because the number of inlets or outlets an object has can
+change based on its text content.
 
 Support for more complex PureData elements could be added fairly easily - I only
 included the bare minimum because my Android app works with
