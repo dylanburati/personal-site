@@ -1,42 +1,63 @@
-import { Link } from "gatsby"
 import PropTypes from "prop-types"
 import React from "react"
+import { useStaticQuery, graphql } from "gatsby"
+import { GitHub, Linkedin } from "react-feather";
 
-const Header = ({ siteTitle }) => (
-  <header
-    style={{
-      background: `rebeccapurple`,
-      marginBottom: `1.45rem`,
-    }}
-  >
-    <div
-      style={{
-        margin: `0 auto`,
-        maxWidth: 960,
-        padding: `1.45rem 1.0875rem`,
-      }}
-    >
-      <h1 style={{ margin: 0 }}>
-        <Link
-          to="/"
-          style={{
-            color: `white`,
-            textDecoration: `none`,
-          }}
-        >
-          {siteTitle}
-        </Link>
-      </h1>
-    </div>
-  </header>
-)
+const Icon = {
+  GitHub,
+  Linkedin
+}
+
+const Header = (props) => {
+  const data = useStaticQuery(graphql`
+    query SiteTitleQuery {
+      site {
+        siteMetadata {
+          title
+          externalLinks {
+            featherIcon
+            text
+            href
+          }
+        }
+      }
+    }
+  `)
+
+  const pageTitle = (props.title === '' ? data.site.siteMetadata.title : props.title);
+  let allLinks = props.links.concat(data.site.siteMetadata.externalLinks);
+
+  return (
+    <nav className="py-3 px-5 bg-navy-dark">
+      <div className="container flex items-center mx-auto">
+        <a className="font-semibold text-xl text-gray-200" href="/">{pageTitle}</a>
+        <div className="flex-grow"></div>
+        {allLinks.map(link => {
+          const ThisIcon = (link.featherIcon ? Icon[link.text] : null);
+          let content;
+          if(ThisIcon == null) {
+            content = link.text;
+          } else {
+            content = <ThisIcon className="stroke-current" style={{fill: 'transparent'}} />
+          }
+          return (
+            <a key={link.href} className="text-gray-400 hover:text-white ml-4" href={link.href}>
+              {content}
+            </a>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 
 Header.propTypes = {
-  siteTitle: PropTypes.string,
+  title: PropTypes.string
 }
 
 Header.defaultProps = {
-  siteTitle: ``,
+  title: ``,
+  links: []
 }
 
 export default Header

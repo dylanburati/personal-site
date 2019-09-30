@@ -7,46 +7,37 @@
 
 import React from "react"
 import PropTypes from "prop-types"
-import { useStaticQuery, graphql } from "gatsby"
 
 import Header from "./header"
-import "./layout.css"
 
-const Layout = ({ children }) => {
-  const data = useStaticQuery(graphql`
-    query SiteTitleQuery {
-      site {
-        siteMetadata {
-          title
-        }
-      }
-    }
-  `)
-
+const Layout = ({ children, className, navLinks }) => {
   return (
     <>
-      <Header siteTitle={data.site.siteMetadata.title} />
-      <div
-        style={{
-          margin: `0 auto`,
-          maxWidth: 960,
-          padding: `0px 1.0875rem 1.45rem`,
-          paddingTop: 0,
-        }}
-      >
-        <main>{children}</main>
-        <footer>
-          © {new Date().getFullYear()}, Built with
-          {` `}
-          <a href="https://www.gatsbyjs.org">Gatsby</a>
-        </footer>
-      </div>
+      <Header links={navLinks} />
+      <main className={className}>{children}</main>
+      <footer className="px-5 mt-10">
+        <div className="container mx-auto pt-5 pb-10 text-sm parskip-0">
+          <p>© Dylan Burati {new Date().getFullYear()}</p>
+          <p>Built with <a href="https://www.gatsbyjs.org">Gatsby</a></p>
+        </div>
+      </footer>
     </>
   )
 }
 
+Layout.defaultProps = {
+  className: '',
+  navLinks: []
+}
+
 Layout.propTypes = {
   children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+  navLinks: PropTypes.arrayOf(PropTypes.shape({
+    featherIcon: PropTypes.bool,
+    text: PropTypes.string,
+    href: PropTypes.string
+  }))
 }
 
 export default Layout
