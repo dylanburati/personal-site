@@ -1,6 +1,7 @@
 import React from "react"
 import { graphql } from "gatsby"
 import Layout from "../components/layout"
+import SEO from "../components/seo"
 
 import "../css/prism.css"
 export default ({ data }) => {
@@ -10,6 +11,7 @@ export default ({ data }) => {
         navLinks={[
           { text: 'Blog', href: '/blog' }
         ]}>
+      <SEO title={post.frontmatter.title} />
       <div className="container mx-auto">
         <div className="my-8">
           <h1 className="mb-0">{post.frontmatter.title}</h1>
