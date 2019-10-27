@@ -25,7 +25,7 @@ if(process.env.NODE_ENV === 'production') {
 module.exports = {
   siteMetadata: {
     title: `Dylan Burati`,
-    description: `.`,
+    description: `My personal website, built with Gatsby`,
     author: `@dylanburati`,
     externalLinks: [
       {
@@ -53,7 +53,8 @@ module.exports = {
       resolve: `gatsby-transformer-remark`,
       options: {
         plugins: [
-          `gatsby-remark-prismjs`
+          `gatsby-remark-prismjs`,
+          `gatsby-remark-autolink-headers`
         ]
       }
     },

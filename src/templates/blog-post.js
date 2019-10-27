@@ -1,11 +1,23 @@
 import React from "react"
 import { graphql } from "gatsby"
+import rehypeReact from "rehype-react"
 import Layout from "../components/layout"
 import SEO from "../components/seo"
+import FundiesLinterLoadable from "../components/fundiesLinter/loadable"
+import TableOfContents from "../components/tocCreator"
 
 import "../css/prism.css"
+
 export default ({ data }) => {
-  const post = data.markdownRemark
+  const post = data.markdownRemark;
+  const renderAst = new rehypeReact({
+    createElement: React.createElement,
+    components: {
+      'fundies-linter': FundiesLinterLoadable,
+      'table-of-contents': TableOfContents(post.tableOfContents)
+    }
+  }).Compiler;
+
   return (
     <Layout className="px-5"
         navLinks={[
@@ -19,7 +31,9 @@ export default ({ data }) => {
             {post.frontmatter.date}<span className="px-3 text-gray-500 text-lg pb-px">|</span>{post.frontmatter.author}
           </span>
         </div>
-        <div data-markdown="true" dangerouslySetInnerHTML={{ __html: post.html }} />
+        <div data-markdown="true">
+          {renderAst(post.htmlAst)}
+        </div>
       </div>
     </Layout>
   )
@@ -28,7 +42,8 @@ export default ({ data }) => {
 export const query = graphql`
   query($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
-      html
+      htmlAst
+      tableOfContents(maxDepth: 3)
       frontmatter {
         title
         author
