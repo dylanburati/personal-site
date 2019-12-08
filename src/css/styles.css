@@ -43,7 +43,7 @@ button:focus, summary:focus {
   --light-color-accent-200: theme('colors.blue.500');
   --light-color-paper: white;
   --light-color-paper-darker: theme('colors.gray.200');
-  --light-color-paper-dark: theme('colors.gray.400');
+  --light-color-paper-dark: theme('colors.gray.300');
 
   --dark-color-pen: #ecf0f1;
   --dark-color-pen-lighter: #bdc3c7;
@@ -63,7 +63,7 @@ button:focus, summary:focus {
   --color-accent-200: var(--light-color-accent-200);
   --color-paper: var(--light-color-paper);
   --color-paper-darker: var(--light-color-paper-darker);
-  --color-paper-light: var(--light-color-paper-dark);
+  --color-paper-dark: var(--light-color-paper-dark);
 }
 
 body {
@@ -77,9 +77,13 @@ body {
 }
 
 [data-mounted] {
-  body, nav {
-    transition: all 150ms linear;
+  body, nav, .transition-linear-150 {
+    transition: background-color 150ms linear, color 150ms linear;
   }
+}
+
+.shadow-md-dark {
+  box-shadow: 0 3px 6px 0px rgba(0, 0, 0, 0.15), 0 1px 4px 1px rgba(0, 0, 0, 0.09);
 }
 
 [data-theme="dark"] {
@@ -91,7 +95,7 @@ body {
   --color-accent-200: var(--dark-color-accent-200);
   --color-paper: var(--dark-color-paper);
   --color-paper-darker: var(--dark-color-paper-darker);
-  --color-paper-light: var(--dark-color-paper-dark);
+  --color-paper-dark: var(--dark-color-paper-dark);
 
   nav {
     background-color: var(--color-paper);
@@ -103,6 +107,10 @@ body {
 
   .card {
     box-shadow: 0px 5px 25px 0px rgba(0, 0, 0, 0.35);
+  }
+
+  .shadow-md-dark {
+    box-shadow: 0 3px 6px 0px rgba(0, 0, 0, 0.35), 0 1px 4px 1px rgba(0, 0, 0, 0.18);
   }
 }
 
