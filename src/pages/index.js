@@ -26,44 +26,43 @@ const HeaderImage = ({src, srcset, alt, caption}) => (
 )
 
 function generateBlogProjectLinks(data, tag) {
-  // const links = data.allMarkdownRemark.edges
-  //     .filter(({node}) => node.frontmatter.tags.includes(tag))
-  //     .map(({node}) => (
-  //       <NavLink
-  //           key={node.fields.slug}
-  //           href={node.fields.slug}
-  //           text={node.frontmatter.title} />
-  //     ));
-  // if(links.length === 0) {
+  const links = data.allMarkdownRemark.edges
+      .filter(({node}) => node.frontmatter.tags.includes(tag))
+      .map(({node}) => (
+        <NavLink
+            key={node.fields.slug}
+            href={node.fields.slug}
+            text={node.frontmatter.title} />
+      ));
+  if(links.length === 0) {
     return false;
-  // }
+  }
 
-  // return (
-  //   <ProjectLinks category="Blog">
-  //     {links}
-  //   </ProjectLinks>
-  // );
+  return (
+    <ProjectLinks category="Blog">
+      {links}
+    </ProjectLinks>
+  );
 }
 
 const IndexPage = () => {
-  const data = [];
-  // const data = useStaticQuery(graphql`
-  //   query {
-  //     allMdx(sort: { fields: [frontmatter___date], order: DESC }) {
-  //       edges {
-  //         node {
-  //           fields {
-  //             slug
-  //           }
-  //           frontmatter {
-  //             title
-  //             tags
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // `)
+  const data = useStaticQuery(graphql`
+    query {
+      allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }) {
+        edges {
+          node {
+            fields {
+              slug
+            }
+            frontmatter {
+              title
+              tags
+            }
+          }
+        }
+      }
+    }
+  `)
 
   const aboutMe = (
     <>
