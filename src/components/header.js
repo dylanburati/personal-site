@@ -1,14 +1,29 @@
-import PropTypes from "prop-types"
-import React from "react"
-import { useStaticQuery, graphql } from "gatsby"
-import { GitHub, Linkedin } from "react-feather";
+import PropTypes from 'prop-types';
+import React from 'react';
+import { useStaticQuery, graphql } from 'gatsby';
+import { GitHub, Linkedin } from 'react-feather';
 
 const Icon = {
   GitHub,
-  Linkedin
+  Linkedin,
+};
+
+function getLinkTextOrIcon(link) {
+  const ThisIcon = link.featherIcon ? Icon[link.featherIcon] : null;
+  if (ThisIcon == null) {
+    return link.text;
+  } else {
+    return (
+      <ThisIcon
+        className="stroke-current"
+        style={{ fill: 'transparent' }}
+        title={link.text}
+      />
+    );
+  }
 }
 
-const Header = (props) => {
+const Header = props => {
   const data = useStaticQuery(graphql`
     query SiteTitleQuery {
       site {
@@ -22,42 +37,41 @@ const Header = (props) => {
         }
       }
     }
-  `)
+  `);
 
-  const pageTitle = (props.title === '' ? data.site.siteMetadata.title : props.title);
+  const pageTitle =
+    props.title === '' ? data.site.siteMetadata.title : props.title;
   let allLinks = props.links.concat(data.site.siteMetadata.externalLinks);
 
   return (
     <nav className="py-3 px-5 bg-navy-dark">
       <div className="container flex items-center mx-auto">
-        <a className="font-semibold text-xl text-gray-200" href="/">{pageTitle}</a>
+        <a className="font-semibold text-xl text-gray-200" href="/">
+          {pageTitle}
+        </a>
         <div className="flex-grow"></div>
-        {allLinks.map(link => {
-          const ThisIcon = (link.featherIcon ? Icon[link.text] : null);
-          let content;
-          if(ThisIcon == null) {
-            content = link.text;
-          } else {
-            content = <ThisIcon className="stroke-current" style={{fill: 'transparent'}} title="" />
-          }
-          return (
-            <a key={link.href} title={link.text} className="text-gray-400 hover:text-white ml-4" href={link.href}>
-              {content}
-            </a>
-          );
-        })}
+        {allLinks.map(link => (
+          <a
+            key={link.href}
+            title={link.text}
+            className="text-gray-400 hover:text-white ml-4"
+            href={link.href}
+          >
+            {getLinkTextOrIcon(link)}
+          </a>
+        ))}
       </div>
     </nav>
   );
-}
+};
 
 Header.propTypes = {
-  title: PropTypes.string
-}
+  title: PropTypes.string,
+};
 
 Header.defaultProps = {
   title: ``,
-  links: []
-}
+  links: [],
+};
 
-export default Header
+export default Header;

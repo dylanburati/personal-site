@@ -4,12 +4,12 @@ module.exports = {
       colors: {
         navy: {
           default: '#01477b',
-          dark: '#092747'
-        }
+          dark: '#092747',
+        },
       },
       maxWidth: {
-        '1/2': '50%'
-      }
-    }
-  }
-}
+        '1/2': '50%',
+      },
+    },
+  },
+};

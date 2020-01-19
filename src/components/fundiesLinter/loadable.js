@@ -1,12 +1,12 @@
-import React from "react"
-import loadable from '@loadable/component'
+import React from 'react';
+import loadable from '@loadable/component';
 
-const FundiesLinter = loadable(() => import('./fundiesLinter'))
+const FundiesLinter = loadable(() => import('./fundiesLinter'));
 
 export default function FundiesLinterLoadable() {
   return (
     <>
       <FundiesLinter />
     </>
-  )
+  );
 }

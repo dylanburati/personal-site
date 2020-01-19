@@ -1,22 +1,22 @@
-import React from "react"
-import PropTypes from "prop-types"
-import { useStaticQuery, graphql } from "gatsby"
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useStaticQuery, graphql } from 'gatsby';
 
-import "../css/styles.css"
-import Layout from "../components/layout"
-import SEO from "../components/seo"
-import Section from "../components/section"
+import '../css/styles.css';
+import Layout from '../components/layout';
+import SEO from '../components/seo';
+import Section from '../components/section';
 
 function getColor(n) {
   return [
-    "#e53e3e",
-    "#dd6b20",
-    "#d69e2e",
-    "#38a169",
-    "#319795",
-    "#3182ce",
-    "#5a67d8",
-    "#805ad5"
+    '#e53e3e',
+    '#dd6b20',
+    '#d69e2e',
+    '#38a169',
+    '#319795',
+    '#3182ce',
+    '#5a67d8',
+    '#805ad5',
   ][(n * 5 + 3) % 8];
 }
 
@@ -26,16 +26,20 @@ function BlogListing(props) {
     <div className="flex items-center mb-4">
       <div className="flex flex-col h-full mr-3 mt-px border text-center">
         <div className="w-12 text-sm">{month}</div>
-        <div className="w-12 flex-grow table"
-            style={{ background: props.calendarColor, minHeight: '2rem' }}>
-          <span className="table-cell align-middle inline-block text-white">{day}</span>
+        <div
+          className="w-12 flex-grow table"
+          style={{ background: props.calendarColor, minHeight: '2rem' }}
+        >
+          <span className="table-cell align-middle inline-block text-white">
+            {day}
+          </span>
         </div>
       </div>
       <div className="flex flex-col flex-1">
-        <a className="hover:underline text-xl font-semibold" href={props.href}>{props.title}</a>
-        <p className="mb-0 text-gray-700">
-          {props.subtitle}
-        </p>
+        <a className="hover:underline text-xl font-semibold" href={props.href}>
+          {props.title}
+        </a>
+        <p className="mb-0 text-gray-700">{props.subtitle}</p>
       </div>
     </div>
   );
@@ -46,8 +50,8 @@ BlogListing.propTypes = {
   date: PropTypes.string,
   href: PropTypes.string,
   title: PropTypes.string,
-  subtitle: PropTypes.string
-}
+  subtitle: PropTypes.string,
+};
 
 const BlogPage = () => {
   const data = useStaticQuery(graphql`
@@ -67,37 +71,41 @@ const BlogPage = () => {
         }
       }
     }
-  `)
+  `);
 
-  const allPostData = data.allMarkdownRemark.edges.map(({node}) => {
+  const allPostData = data.allMarkdownRemark.edges.map(({ node }) => {
     const [date, yearStr] = node.frontmatter.date.split(',');
     return {
       href: node.fields.slug,
       title: node.frontmatter.title,
       date,
       year: parseInt(yearStr, 10),
-      subtitle: node.frontmatter.subtitle
-    }
+      subtitle: node.frontmatter.subtitle,
+    };
   });
 
   const allPosts = [];
   allPostData.reduce((acc, cur, i) => {
-    if(cur.year < acc) {
+    if (cur.year < acc) {
       allPosts.push(
-        <h3 key={cur.year.toString()} className="mb-3 mt-6">{cur.year}</h3>
+        <h3 key={cur.year.toString()} className="mb-3 mt-6">
+          {cur.year}
+        </h3>
       );
     }
     allPosts.push(
-      <BlogListing key={cur.href}
-          href={cur.href}
-          title={cur.title}
-          month={cur.month}
-          date={cur.date}
-          calendarColor={getColor(allPostData.length - i)}
-          subtitle={cur.subtitle} />
+      <BlogListing
+        key={cur.href}
+        href={cur.href}
+        title={cur.title}
+        month={cur.month}
+        date={cur.date}
+        calendarColor={getColor(allPostData.length - i)}
+        subtitle={cur.subtitle}
+      />
     );
     return cur.year;
-  }, (new Date()).getFullYear());
+  }, new Date().getFullYear());
 
   return (
     <Layout>
@@ -108,6 +116,6 @@ const BlogPage = () => {
       </Section>
     </Layout>
   );
-}
+};
 
-export default BlogPage
+export default BlogPage;
