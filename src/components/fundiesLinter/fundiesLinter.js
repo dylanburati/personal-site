@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { lint } from 'teachlangs-lint';
+import { lint } from '@dylanburati/teachlangs-lint';
 
 class StandardIn extends PureComponent {
   constructor(props) {
