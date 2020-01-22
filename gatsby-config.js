@@ -57,6 +57,7 @@ if (process.env.NODE_ENV === 'production') {
         'textarea',
         'ul',
         'video',
+        'anchor',
       ],
       rejected: true,
       defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],

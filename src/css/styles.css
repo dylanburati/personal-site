@@ -66,10 +66,6 @@ button:focus, summary:focus {
   --color-paper-light: var(--light-color-paper-dark);
 }
 
-nav, body {
-  transition: all 0.15s linear;
-}
-
 body {
   background-color: var(--color-paper);
   color: var(--color-pen);
@@ -78,6 +74,12 @@ body {
 .header-image {
   filter: brightness(0.85);
   max-height: 50vh;
+}
+
+[data-mounted] {
+  body, nav {
+    transition: all 150ms linear;
+  }
 }
 
 [data-theme="dark"] {
@@ -139,6 +141,14 @@ body {
 
   a:hover {
     @apply text-accent-700 underline;
+  }
+
+  .anchor {
+    @apply text-pen-light;
+  }
+
+  .anchor svg {
+    @apply stroke-current;
   }
 
   ol, ul {
