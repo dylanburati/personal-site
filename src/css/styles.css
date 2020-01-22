@@ -16,6 +16,10 @@ p {
   @apply mb-4;
 }
 
+button:focus, summary:focus {
+  outline: 0;
+}
+
 @tailwind components;
 
 .card {
@@ -29,6 +33,76 @@ p {
 }
 
 @tailwind utilities;
+
+:root {
+  --light-color-pen: black;
+  --light-color-pen-lighter: theme('colors.gray.700');
+  --light-color-pen-light: theme('colors.gray.500');
+  --light-color-accent: theme('colors.blue.700');
+  --light-color-accent-700: theme('colors.blue.800');
+  --light-color-accent-200: theme('colors.blue.500');
+  --light-color-paper: white;
+  --light-color-paper-darker: theme('colors.gray.200');
+  --light-color-paper-dark: theme('colors.gray.400');
+
+  --dark-color-pen: #ecf0f1;
+  --dark-color-pen-lighter: #bdc3c7;
+  --dark-color-pen-light: #9ea4a9;
+  --dark-color-accent: #3498db;
+  --dark-color-accent-700: #29b0ff;
+  --dark-color-accent-200: #2980b9;
+  --dark-color-paper: #181818;
+  --dark-color-paper-darker: #303336;
+  --dark-color-paper-dark: #505356;
+
+  --color-pen: var(--light-color-pen);
+  --color-pen-lighter: var(--light-color-pen-lighter);
+  --color-pen-light: var(--light-color-pen-light);
+  --color-accent: var(--light-color-accent);
+  --color-accent-700: var(--light-color-accent-700);
+  --color-accent-200: var(--light-color-accent-200);
+  --color-paper: var(--light-color-paper);
+  --color-paper-darker: var(--light-color-paper-darker);
+  --color-paper-light: var(--light-color-paper-dark);
+}
+
+nav, body {
+  transition: all 0.15s linear;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-pen);
+}
+
+.header-image {
+  filter: brightness(0.85);
+  max-height: 50vh;
+}
+
+[data-theme="dark"] {
+  --color-pen: var(--dark-color-pen);
+  --color-pen-lighter: var(--dark-color-pen-lighter);
+  --color-pen-light: var(--dark-color-pen-light);
+  --color-accent: var(--dark-color-accent);
+  --color-accent-700: var(--dark-color-accent-700);
+  --color-accent-200: var(--dark-color-accent-200);
+  --color-paper: var(--dark-color-paper);
+  --color-paper-darker: var(--dark-color-paper-darker);
+  --color-paper-light: var(--dark-color-paper-dark);
+
+  nav {
+    background-color: var(--color-paper);
+  }
+
+  .header-image {
+    filter: brightness(0.75) grayscale(0.1);
+  }
+
+  .card {
+    box-shadow: 0px 5px 25px 0px rgba(0, 0, 0, 0.35);
+  }
+}
 
 @responsive {
   .flex-basis-1\/2 {
@@ -60,11 +134,11 @@ p {
   }
 
   a {
-    @apply text-blue-700;
+    @apply text-accent;
   }
 
   a:hover {
-    @apply text-blue-800 underline;
+    @apply text-accent-700 underline;
   }
 
   ol, ul {
@@ -93,7 +167,7 @@ p {
   }
 
   pre {
-    @apply p-3 mb-4 bg-gray-200 overflow-x-auto;
+    @apply p-3 mb-4 bg-paper-darker overflow-x-auto;
     line-height: 1.25
   }
 

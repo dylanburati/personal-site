@@ -19,14 +19,15 @@ class StandardIn extends PureComponent {
         <div>
           <textarea
             onChange={evt => this.setState({ value: evt.target.value })}
-            className="w-full font-mono text-sm leading-tight border-2 border-gray-400 focus:border-blue-400 p-2"
+            className="w-full font-mono text-sm leading-tight border-2 border-paper-dark focus:border-accent-200 p-2
+              placeholder-pen-light bg-paper"
             placeholder="Paste code from DrRacket"
             spellCheck={false}
             style={{ height: '25rem' }}
           />
         </div>
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded"
+          className="bg-accent-200 hover:bg-accent text-white py-2 px-4 rounded"
           type="submit"
           onClick={this.handleSubmit}
         >
@@ -68,8 +69,8 @@ class FundiesLinter extends React.Component {
     let standardOut = null;
     if (this.state.error !== false) {
       standardOut = (
-        <div class="mt-4">
-          <em className="font-bold text-red-700">{this.state.error}</em>
+        <div className="mt-4">
+          <em className="font-bold text-danger">{this.state.error}</em>
         </div>
       );
     } else if (Array.isArray(this.state.warningGroups)) {
@@ -80,7 +81,7 @@ class FundiesLinter extends React.Component {
 
           {this.state.warningGroups.map(({ title, warnings }, i) => (
             <details className="mb-4" open={true} key={i}>
-              <summary className="p-1 bg-gray-200 cursor-pointer">
+              <summary className="p-1 bg-paper-darker cursor-pointer">
                 {title}
               </summary>
               {warnings.map((w, j) => (

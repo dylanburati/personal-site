@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Header from './header';
 
 const Layout = ({ children, className, navLinks }) => {
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const page = (
     <>
       <Header links={navLinks} />
       <main className={className}>{children}</main>
@@ -17,6 +22,10 @@ const Layout = ({ children, className, navLinks }) => {
       </footer>
     </>
   );
+
+  if (!mounted) return <div style={{ visibility: 'hidden' }}>{page}</div>;
+
+  return page;
 };
 
 Layout.defaultProps = {

@@ -39,7 +39,7 @@ function BlogListing(props) {
         <a className="hover:underline text-xl font-semibold" href={props.href}>
           {props.title}
         </a>
-        <p className="mb-0 text-gray-700">{props.subtitle}</p>
+        <p className="mb-0 text-pen-lighter">{props.subtitle}</p>
       </div>
     </div>
   );

@@ -12,12 +12,11 @@ import NavLink from '../components/navLink';
 const HeaderImage = ({ src, srcset, alt, caption }) => (
   <div className="relative">
     <img
-      className="object-center object-cover w-full"
+      className="object-center object-cover w-full header-image"
       src={src}
       alt={alt}
       srcSet={srcset}
       sizes="100vw"
-      style={{ filter: 'brightness(0.85)', maxHeight: '50vh' }}
     />
     <div className="absolute bottom-0 w-full max-h-full overflow-hidden px-5">
       <div className="container mx-auto">

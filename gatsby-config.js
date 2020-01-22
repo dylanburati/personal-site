@@ -94,7 +94,7 @@ module.exports = {
     {
       resolve: `gatsby-transformer-remark`,
       options: {
-        plugins: [`gatsby-remark-prismjs`, `gatsby-remark-autolink-headers`],
+        plugins: [`gatsby-remark-autolink-headers`],
       },
     },
     {

@@ -1,12 +1,38 @@
+const { colors } = require('tailwindcss/defaultTheme');
+
 module.exports = {
   theme: {
-    extend: {
-      colors: {
-        navy: {
-          default: '#01477b',
-          dark: '#092747',
-        },
+    borderColor: theme => ({
+      default: theme('colors.paper.darker', 'currentColor'),
+      ...theme('colors'),
+    }),
+    colors: {
+      black: colors.black,
+      white: colors.white,
+      gray: colors.gray,
+      blue: colors.blue,
+      paper: {
+        default: 'var(--color-paper)',
+        darker: 'var(--color-paper-darker)',
+        dark: 'var(--color-paper-dark)',
       },
+      pen: {
+        default: 'var(--color-pen)',
+        lighter: 'var(--color-pen-lighter)',
+        light: 'var(--color-pen-light)',
+      },
+      accent: {
+        default: 'var(--color-accent)',
+        700: 'var(--color-accent-700)',
+        200: 'var(--color-accent-200)',
+      },
+      danger: colors.red['700'],
+      navy: {
+        default: '#01477b',
+        dark: '#092747',
+      },
+    },
+    extend: {
       maxWidth: {
         '1/2': '50%',
       },

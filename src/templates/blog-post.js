@@ -6,7 +6,7 @@ import SEO from '../components/seo';
 import FundiesLinterLoadable from '../components/fundiesLinter/loadable';
 import TableOfContents from '../components/tocCreator';
 
-import '../css/prism.css';
+import '../css/styles.css';
 
 export default ({ data }) => {
   const post = data.markdownRemark;
@@ -24,9 +24,9 @@ export default ({ data }) => {
       <div className="container mx-auto">
         <div className="my-8">
           <h1 className="mb-0">{post.frontmatter.title}</h1>
-          <span className="text-gray-700">
+          <span className="text-pen-lighter">
             {post.frontmatter.date}
-            <span className="px-3 text-gray-500 text-lg pb-px">|</span>
+            <span className="px-3 text-paper-dark text-lg pb-px">|</span>
             {post.frontmatter.author}
           </span>
         </div>
