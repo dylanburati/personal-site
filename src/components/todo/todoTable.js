@@ -16,7 +16,7 @@ class TodoTable extends React.Component {
     super(props);
     this.state = {
       command: '',
-      values: [],
+      values: null,
       nextId: 0,
     };
     this.handleChange = this.handleChange.bind(this);
@@ -34,19 +34,31 @@ class TodoTable extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.sheet.name !== this.props.sheet.name) {
-      this.setInitialValues();
+      if (this.props.sheet.status === 'saved') {
+        this.setState({
+          values: null,
+        });
+        this.setInitialValues();
+      } else if (this.props.sheet.status === 'unsaved') {
+        this.saveValues();
+      }
     }
   }
 
   async setInitialValues() {
-    if (this.props.sheet.status === 'unsaved') {
-      this.saveValues();
-      return;
-    } else if (this.props.sheet.status === 'saved') {
+    if (this.props.sheet.status === 'saved') {
       const json = await this.props.gateway.load(this.props.sheet.name);
       if (!json.success) {
-        return this.props.handleBack();
+        if (json.message && json.message.startsWith('Network error')) {
+          setTimeout(() => {
+            if (this.state.values === null) this.setInitialValues();
+          }, 4000);
+        } else {
+          this.props.handleBack();
+        }
+        return;
       }
+
       const values = json.data ? json.data.values : null;
       if (
         Array.isArray(values) &&
@@ -141,7 +153,8 @@ class TodoTable extends React.Component {
   }
 
   render() {
-    const maxDigits = 1 + Math.floor(Math.log10(this.state.values.length));
+    const values = this.state.values !== null ? this.state.values : [];
+    const maxDigits = 1 + Math.floor(Math.log10(values.length));
     return (
       <DragDropContext onDragEnd={this.onDragEnd}>
         <div className="flex items-center mb-3">
@@ -162,7 +175,7 @@ class TodoTable extends React.Component {
         <Droppable droppableId="main">
           {provided => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
-              {this.state.values.map((e, rowIndex) => (
+              {values.map((e, rowIndex) => (
                 <TodoRow
                   key={e[0]}
                   id={e[0]}

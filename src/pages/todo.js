@@ -119,13 +119,23 @@ function TodoApp({ query }) {
     if (state.gateway == null) return;
 
     let ignore = false;
-    state.gateway.list().then(({ bins }) => {
-      if (!ignore && Array.isArray(bins)) {
-        const sheetList = bins.sort(
+    state.gateway.list().then(json => {
+      if (ignore) return;
+      if (json.success && Array.isArray(json.bins)) {
+        const sheetList = json.bins.sort(
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         dispatch({ type: 'sheet-list-loaded', sheetList });
+      } else {
+        if (!json.message) {
+          return;
+        } else if (json.message.startsWith('Network error')) {
+          // todo notify
+          return;
+        } else if (json.message.startsWith('Unauthorized')) {
+          dispatch({ type: 'logout' });
+        }
       }
     });
     return () => {
@@ -159,6 +169,30 @@ function TodoApp({ query }) {
         },
       });
     };
+    const handleDelete = async items => {
+      Promise.all(items.map(item => state.gateway.del(item.name))).then(
+        results => {
+          const errors = results
+            .filter(json => !json.success)
+            .map(json => json.message);
+
+          if (errors.some(e => e.startsWith('Unauthorized'))) {
+            dispatch({ type: 'logout' });
+            return;
+          }
+          if (errors.length === results.length) {
+            return;
+          }
+          const toRemove = results
+            .filter(json => json.success)
+            .map(json => json.name);
+          const sheetList = state.sheetList.filter(
+            item => !toRemove.includes(item.name)
+          );
+          dispatch({ type: 'sheet-list-loaded', sheetList });
+        }
+      );
+    };
     const handleOpen = name => {
       navigate(`?name=${name}`);
       dispatch({
@@ -176,6 +210,7 @@ function TodoApp({ query }) {
         handleBack={handleBack}
         handleCreate={handleCreate}
         handleOpen={handleOpen}
+        handleDelete={handleDelete}
       />
     );
   } else if (state.view === 'sheet') {
@@ -185,6 +220,7 @@ function TodoApp({ query }) {
       });
     };
     const handleName = name => {
+      navigate(`?name=${name}`);
       dispatch({
         type: 'modify-sheet',
         sheet: {

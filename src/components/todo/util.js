@@ -33,6 +33,21 @@ function post(path, data, additionalHeaders = {}) {
     }));
 }
 
+function httpDelete(path, additionalHeaders = {}) {
+  return fetch(`${baseUrl}${path}`, {
+    method: 'DELETE',
+    headers: {
+      ...additionalHeaders,
+    },
+    referrerPolicy: 'no-referrer',
+  })
+    .then(response => response.json())
+    .catch(err => ({
+      message: 'Network error',
+      success: false,
+    }));
+}
+
 export async function login(username, password) {
   return await post('/login', {
     username,
@@ -54,6 +69,12 @@ export function getGatewayFunctions(token) {
 
     async load(name) {
       return await get(`/c/${collectionName}/${name}`, {
+        'X-Access-Token': token,
+      });
+    },
+
+    async del(name) {
+      return await httpDelete(`/c/${collectionName}/${name}`, {
         'X-Access-Token': token,
       });
     },
