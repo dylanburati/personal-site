@@ -47,7 +47,7 @@ class TodoTable extends React.Component {
 
   async setInitialValues() {
     if (this.props.sheet.status === 'saved') {
-      const json = await this.props.gateway.load(this.props.sheet.name);
+      const json = await this.props.load(this.props.sheet.name);
       if (!json.success) {
         if (json.message && json.message.startsWith('Network error')) {
           setTimeout(() => {
@@ -120,7 +120,7 @@ class TodoTable extends React.Component {
   saveValues() {
     if (this.props.sheet.status !== 'unnamed') {
       // Sheet has name
-      this.props.gateway
+      this.props
         .save(this.props.sheet.name, {
           data: {
             schema: {
@@ -206,10 +206,8 @@ TodoTable.propTypes = {
       version: PropTypes.number.isRequired,
     }).isRequired,
   }),
-  gateway: PropTypes.shape({
-    load: PropTypes.func.isRequired,
-    save: PropTypes.func.isRequired,
-  }),
+  load: PropTypes.func.isRequired,
+  save: PropTypes.func.isRequired,
   handleBack: PropTypes.func,
   handleName: PropTypes.func,
 };

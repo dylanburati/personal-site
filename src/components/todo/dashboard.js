@@ -11,7 +11,7 @@ function DashTable({ rows, handleSelect, handleOpen }) {
     <table className="w-full mt-2">
       <thead>
         <tr>
-          <th className="pl-2"></th>
+          <th className="px-2" width="1"></th>
           <th className="px-2 py-1 text-left">Name</th>
           <th className="px-2 py-1 text-right">Date modified</th>
         </tr>
@@ -23,7 +23,7 @@ function DashTable({ rows, handleSelect, handleOpen }) {
             className="hover:bg-paper-darker cursor-pointer"
             onClick={ev => handleOpen(item.name)}
           >
-            <td className="pl-2 pt-1">
+            <td className="px-2 pt-1">
               <input
                 type="checkbox"
                 onClick={ev => ev.stopPropagation()}
@@ -84,7 +84,11 @@ function Dashboard({
           <span className="font-bold text-sm uppercase mx-1">Create</span>
         </button>
       </div>
-      <DashTable rows={bins} handleSelect={handleSelect} handleOpen={handleOpen} />
+      <DashTable
+        rows={bins}
+        handleSelect={handleSelect}
+        handleOpen={handleOpen}
+      />
     </div>
   );
 }

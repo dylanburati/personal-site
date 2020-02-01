@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { login } from './util';
+import { useContextGateway } from './util';
 
 function LoginForm({ handleLogin }) {
+  const { login } = useContextGateway();
   const [error, setError] = useState(null);
 
   const handleSubmit = ev => {
     ev.preventDefault();
     const { username, password } = ev.target.elements;
-    login(username.value, password.value).then(async res => {
+    login(username.value, password.value).then(res => {
       if (res.success) {
-        handleLogin(res.token);
+        handleLogin();
       } else {
         setError(res.message ? res.message : 'Unknown error');
       }

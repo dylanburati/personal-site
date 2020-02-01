@@ -5,7 +5,7 @@ import { pickBy } from 'lodash';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
 import Section from '../components/section';
-import { getGatewayFunctions } from '../components/todo/util';
+import { useContextGateway, GatewayProvider } from '../components/todo/util';
 import LoginForm from '../components/todo/loginForm';
 import Dashboard from '../components/todo/dashboard';
 import TodoTable from '../components/todo/todoTable';
@@ -30,15 +30,12 @@ const todoSchema = {
 function reducer(state, action) {
   switch (action.type) {
     case 'logout':
-      localStorage.removeItem('auth_token');
       return {
         view: 'login',
       };
     case 'login':
-      localStorage.setItem('auth_token', action.token);
       return {
         view: 'sheet-list-loading',
-        gateway: getGatewayFunctions(action.token),
       };
     case 'sheet-list-loaded':
       const view = state.view === 'sheet' ? 'sheet' : 'sheet-list';
@@ -70,7 +67,7 @@ function reducer(state, action) {
       const nextState = pickBy(state, (val, key) => key !== 'sheet');
       return {
         ...nextState,
-        view: 'sheet-list',
+        view: state.sheetList ? 'sheet-list' : 'sheet-list-loading',
       };
     default:
       throw new Error('Unknown action');
@@ -78,25 +75,13 @@ function reducer(state, action) {
 }
 
 function TodoApp({ query }) {
+  const { user, logout, list, load, del, save } = useContextGateway();
   const [state, dispatch] = useReducer(reducer, {
-    view: 'none',
+    view: user ? 'sheet-list-loading' : 'login',
   });
-  if (state.view === 'none' && typeof window !== 'undefined') {
-    const prevToken = localStorage.getItem('auth_token');
-    if (prevToken !== null) {
-      dispatch({
-        type: 'login',
-        token: prevToken,
-      });
-    } else {
-      dispatch({
-        type: 'logout',
-      });
-    }
-  }
 
   useEffect(() => {
-    if (state.gateway == null) return;
+    if (!user) return;
 
     const { name } = qs.parse(query.replace(/^\?/, ''));
     if (name) {
@@ -113,13 +98,13 @@ function TodoApp({ query }) {
         type: 'close',
       });
     }
-  }, [state.gateway, query]);
+  }, [user, query]);
 
   useEffect(() => {
-    if (state.gateway == null) return;
+    if (!user) return;
 
     let ignore = false;
-    state.gateway.list().then(json => {
+    list().then(json => {
       if (ignore) return;
       if (json.success && Array.isArray(json.bins)) {
         const sheetList = json.bins.sort(
@@ -127,34 +112,24 @@ function TodoApp({ query }) {
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         dispatch({ type: 'sheet-list-loaded', sheetList });
-      } else {
-        if (!json.message) {
-          return;
-        } else if (json.message.startsWith('Network error')) {
-          // todo notify
-          return;
-        } else if (json.message.startsWith('Unauthorized')) {
-          dispatch({ type: 'logout' });
-        }
       }
     });
     return () => {
       ignore = true;
     };
-  }, [state.gateway, state.sheet]);
+  }, [user, list, state.sheet]);
 
   let mainView = null;
-  if (state.view === 'login') {
-    const handleLogin = token => {
-      localStorage.setItem('auth_token', token);
+  if (!user || state.view === 'login') {
+    const handleLogin = () => {
       dispatch({
         type: 'login',
-        token,
       });
     };
     mainView = <LoginForm handleLogin={handleLogin} />;
   } else if (state.view === 'sheet-list') {
     const handleBack = () => {
+      logout();
       dispatch({
         type: 'logout',
       });
@@ -170,28 +145,22 @@ function TodoApp({ query }) {
       });
     };
     const handleDelete = async items => {
-      Promise.all(items.map(item => state.gateway.del(item.name))).then(
-        results => {
-          const errors = results
-            .filter(json => !json.success)
-            .map(json => json.message);
+      Promise.all(items.map(item => del(item.name))).then(results => {
+        const errors = results
+          .filter(json => !json.success)
+          .map(json => json.message);
 
-          if (errors.some(e => e.startsWith('Unauthorized'))) {
-            dispatch({ type: 'logout' });
-            return;
-          }
-          if (errors.length === results.length) {
-            return;
-          }
-          const toRemove = results
-            .filter(json => json.success)
-            .map(json => json.name);
-          const sheetList = state.sheetList.filter(
-            item => !toRemove.includes(item.name)
-          );
-          dispatch({ type: 'sheet-list-loaded', sheetList });
+        if (errors.length === results.length) {
+          return;
         }
-      );
+        const toRemove = results
+          .filter(json => json.success)
+          .map(json => json.name);
+        const sheetList = state.sheetList.filter(
+          item => !toRemove.includes(item.name)
+        );
+        dispatch({ type: 'sheet-list-loaded', sheetList });
+      });
     };
     const handleOpen = name => {
       navigate(`?name=${name}`);
@@ -232,7 +201,8 @@ function TodoApp({ query }) {
     mainView = (
       <TodoTable
         sheet={state.sheet}
-        gateway={state.gateway}
+        load={load}
+        save={save}
         handleBack={handleClose}
         handleName={handleName}
       />
@@ -252,7 +222,9 @@ const TodoPage = ({ location }) => {
     <Layout navLinks={[{ text: 'Blog', href: '/blog' }]}>
       <SEO title="Todo" />
 
-      <TodoApp query={location.search} />
+      <GatewayProvider>
+        <TodoApp query={location.search} />
+      </GatewayProvider>
     </Layout>
   );
 };

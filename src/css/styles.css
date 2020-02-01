@@ -78,7 +78,7 @@ body {
 
 [data-mounted] {
   body, nav, .transition-linear-150 {
-    transition: background-color 150ms linear, color 150ms linear;
+    transition: background-color 150ms linear;
   }
 }
 
