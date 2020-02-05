@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default ({ title, description, technologies, concepts, children }) => (
-  <div className="flex flex-col lg:flex-row mb-3 bg-paper card">
+  <div className="flex flex-col lg:flex-row mb-3 card">
     <div className="lg:flex-basis-2/3 p-5">
       <h3 className="mb-3 text-2xl">{title}</h3>
       <p className="mb-4">{description}</p>

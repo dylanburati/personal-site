@@ -61,7 +61,7 @@ function Dashboard({
     <div>
       <div className="flex items-center border-b pb-2">
         <button
-          className="bg-paper hover:bg-paper-darker text-accent p-1 rounded-full"
+          className="hover:bg-paper-darker text-accent p-1 rounded-full"
           onClick={handleBack}
         >
           <ArrowLeft className="stroke-current" />
@@ -69,7 +69,7 @@ function Dashboard({
         <span className="flex-grow"></span>
         {selected.length > 0 && (
           <button
-            className="bg-paper hover:bg-paper-darker text-accent py-1 px-2 mb-1 rounded"
+            className="hover:bg-paper-darker text-accent py-1 px-2 mb-1 rounded"
             onClick={() => handleDelete(selected)}
           >
             <Trash2 className="stroke-current inline" />
@@ -77,7 +77,7 @@ function Dashboard({
           </button>
         )}
         <button
-          className="bg-paper hover:bg-paper-darker text-accent py-1 px-2 mb-1 rounded"
+          className="hover:bg-paper-darker text-accent py-1 px-2 mb-1 rounded"
           onClick={handleCreate}
         >
           <FilePlus className="stroke-current inline" />
