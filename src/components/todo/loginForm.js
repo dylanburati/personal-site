@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useContextGateway } from './util';
+import { useContextGateway } from './gatewayProvider';
 
 function LoginForm({ handleLogin }) {
   const { login } = useContextGateway();

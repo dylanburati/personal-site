@@ -5,7 +5,7 @@ import { pickBy } from 'lodash';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
 import Section from '../components/section';
-import { useContextGateway, GatewayProvider } from '../components/todo/util';
+import { useContextGateway, GatewayProvider } from '../components/todo/gatewayProvider';
 import LoginForm from '../components/todo/loginForm';
 import Dashboard from '../components/todo/dashboard';
 import TodoTable from '../components/todo/todoTable';

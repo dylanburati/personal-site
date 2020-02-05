@@ -159,7 +159,7 @@ class TodoTable extends React.Component {
       <DragDropContext onDragEnd={this.onDragEnd}>
         <div className="flex items-center mb-3">
           <button
-            className="bg-paper hover:bg-paper-darker text-accent p-1 rounded-full"
+            className="hover:bg-paper-darker text-accent p-1 rounded-full"
             onClick={this.props.handleBack}
           >
             <ArrowLeft className="stroke-current" />

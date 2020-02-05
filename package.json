@@ -33,7 +33,9 @@
     "eslint-config-prettier": "^6.9.0",
     "eslint-config-react-app": "^5.1.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "esm": "^3.2.25",
     "gh-pages": "^2.2.0",
+    "mocha": "^7.0.1",
     "precss": "^4.0.0",
     "prettier": "^1.19.1"
   },
@@ -47,7 +49,7 @@
     "lint": "eslint --ignore-path .prettierignore ./",
     "start": "npm run develop",
     "serve": "gatsby serve",
-    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing \""
+    "test": "mocha --require esm"
   },
   "repository": {
     "type": "git",
