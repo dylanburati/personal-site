@@ -115,28 +115,38 @@ function useGateway() {
       return json;
     });
   };
-  const saveQueue = {
-    example: [1, Promise.resolve()],
-  };
-  const save = async (name, data) => {
-    if (!(name in saveQueue)) {
-      saveQueue[name] = [1, Promise.resolve()];
+  const saveQueue = {};
+  const save = async (name, data, delay = 2000) => {
+    let q = saveQueue[name];
+    if (!q) {
+      saveQueue[name] = q = {
+        pendingId: 1,
+        pendingTime: 0,
+        lastResult: Promise.resolve(),
+      };
     }
-    const taskId = ++saveQueue[name][0];
-    return await saveQueue[name][1].then(() => {
-      if (taskId === saveQueue[name][0]) {
-        saveQueue[name][1] = post(`/c/${collectionName}/${name}`, data, {
-          'X-Access-Token': token,
-        }).then(json => {
-          if (detect401(json)) {
-            setToken(null);
-          }
-          return json;
-        });
+    const taskId = ++q.pendingId;
+    if (q.pendingTime < Date.now()) {
+      await q.lastResult;
+      if (taskId !== q.pendingId) return;
+      q.pendingTime = Date.now() + delay;
+    } else {
+      q.pendingTime = Math.min(Date.now() + delay, q.pendingTime);
+    }
+    await new Promise(resolve =>
+      setTimeout(resolve, q.pendingTime - Date.now())
+    );
+    if (taskId !== q.pendingId) return;
 
-        return saveQueue[name][1];
+    q.lastResult = post(`/c/${collectionName}/${name}`, data, {
+      'X-Access-Token': token,
+    }).then(json => {
+      if (detect401(json)) {
+        setToken(null);
       }
+      return json;
     });
+    return await q.lastResult;
   };
 
   return {

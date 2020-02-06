@@ -1,8 +1,21 @@
 /**
  * @typedef {{ currentLine?: number, lastLine?: number }} CommandContext
- * @typedef {{ start: number, end?: number }} LineRange
+ * @typedef {{ start: number, end: number }} LineRange
  * @typedef {{ command: string, range: LineRange, args: any[] }} CommandResult
  */
+
+export function parseFileCommand(input) {
+  if (input.startsWith(':w ')) {
+    const name = input.substring(3);
+    if (name.length < 1) return { error: 'Name too short' };
+    if (name.length > 64) return { error: 'Name too long' };
+    return { command: 'w', args: [name] };
+  }
+  if (input.startsWith(':schema ')) {
+    return { command: 'schema', args: [input.substring(8)] };
+  }
+  return null;
+}
 
 /**
  * Parse a Vim-style command
@@ -11,7 +24,7 @@
  * @param {CommandContext} context Info about current line, last line
  * @returns {{ error: string } | CommandResult}
  */
-export function parseCommand(input, context = {}) {
+export function parseLineCommand(input, context = {}) {
   if (!input.startsWith(':')) {
     return { error: 'No command' };
   }
@@ -110,7 +123,8 @@ export function parseCommand(input, context = {}) {
         if (!isAddr(dst)) {
           return { error: 'Move takes 1 required address argument' };
         }
-        return { command, range, args: [dst.value] };
+        const val = Math.max(1, dst.value);
+        return { command, range, args: [val] };
       }
       return { error: 'Move takes 1 required address argument' };
     case 'd':

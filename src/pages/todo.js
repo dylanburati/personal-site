@@ -5,27 +5,15 @@ import { pickBy } from 'lodash';
 import Layout from '../components/layout';
 import SEO from '../components/seo';
 import Section from '../components/section';
-import { useContextGateway, GatewayProvider } from '../components/todo/gatewayProvider';
+import {
+  useContextGateway,
+  GatewayProvider,
+} from '../components/todo/gatewayProvider';
 import LoginForm from '../components/todo/loginForm';
 import Dashboard from '../components/todo/dashboard';
 import TodoTable from '../components/todo/todoTable';
 
 import '../css/styles.css';
-
-/**
- * All schemas must create empty rows as arrays, starting with the numeric string `id`,
- * and containing the field values in the other elements.
- */
-const todoSchema = {
-  version: 1,
-  columns: [{ label: 'Item' }, { label: 'Date' }],
-  emptyRow: function(id) {
-    return [id.toString(), '', ''];
-  },
-  isValidRow: function(row) {
-    return row.length === 3 && Number.isInteger(parseInt(row[0], 10));
-  },
-};
 
 function reducer(state, action) {
   switch (action.type) {
@@ -75,7 +63,7 @@ function reducer(state, action) {
 }
 
 function TodoApp({ query }) {
-  const { user, logout, list, load, del, save } = useContextGateway();
+  const { user, logout, list, del } = useContextGateway();
   const [state, dispatch] = useReducer(reducer, {
     view: user ? 'sheet-list-loading' : 'login',
   });
@@ -90,7 +78,6 @@ function TodoApp({ query }) {
         sheet: {
           name,
           status: 'saved',
-          schema: todoSchema,
         },
       });
     } else {
@@ -117,7 +104,7 @@ function TodoApp({ query }) {
     return () => {
       ignore = true;
     };
-  }, [user, list, state.sheet]);
+  }, [user, list]);
 
   let mainView = null;
   if (!user || state.view === 'login') {
@@ -140,7 +127,6 @@ function TodoApp({ query }) {
         sheet: {
           name: 'New sheet',
           status: 'unnamed',
-          schema: todoSchema,
         },
       });
     };
@@ -164,14 +150,6 @@ function TodoApp({ query }) {
     };
     const handleOpen = name => {
       navigate(`?name=${name}`);
-      dispatch({
-        type: 'open',
-        sheet: {
-          name,
-          status: 'saved',
-          schema: todoSchema,
-        },
-      });
     };
     mainView = (
       <Dashboard
@@ -190,19 +168,11 @@ function TodoApp({ query }) {
     };
     const handleName = name => {
       navigate(`?name=${name}`);
-      dispatch({
-        type: 'modify-sheet',
-        sheet: {
-          name,
-          status: 'unsaved',
-        },
-      });
     };
     mainView = (
       <TodoTable
-        sheet={state.sheet}
-        load={load}
-        save={save}
+        name={state.sheet.name}
+        status={state.sheet.status}
         handleBack={handleClose}
         handleName={handleName}
       />
