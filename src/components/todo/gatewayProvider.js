@@ -83,7 +83,7 @@ function useGateway() {
   }
 
   const detect401 = json =>
-    !json.success && json.message && json.message.startsWith('Unauthorized');
+    !json.success && /^(Unauthorized|Network error)/.test(json.message);
 
   const list = async () => {
     return await get(`/c/${collectionName}`, {
