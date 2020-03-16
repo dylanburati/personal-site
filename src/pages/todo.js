@@ -65,7 +65,8 @@ function reducer(state, action) {
 function TodoApp({ query }) {
   const { user, logout, list, del } = useContextGateway();
   const [state, dispatch] = useReducer(reducer, {
-    view: user ? 'sheet-list-loading' : 'login',
+    view:
+      typeof window === 'undefined' || user ? 'sheet-list-loading' : 'login',
   });
 
   useEffect(() => {
@@ -114,7 +115,7 @@ function TodoApp({ query }) {
       });
     };
     mainView = <LoginForm handleLogin={handleLogin} />;
-  } else if (!user) {
+  } else if (!user || !user.username) {
     mainView = null;
   } else if (state.view === 'sheet-list') {
     const handleBack = () => {

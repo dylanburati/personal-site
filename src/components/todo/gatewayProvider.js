@@ -75,7 +75,7 @@ function useGateway() {
   const [token, setToken] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   );
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(token ? { username: null } : null);
   const clearUser = () => {
     setToken(null);
     setUser(null);
@@ -93,7 +93,7 @@ function useGateway() {
     return new HttpClient(baseUrl, headers, [detect401]);
   }, [token]);
   useEffect(() => {
-    if (token && !user) {
+    if (token && (!user || !user.username)) {
       authHttp.get('/me').then(json => {
         if (json.success) {
           setUser({ username: json.username });
