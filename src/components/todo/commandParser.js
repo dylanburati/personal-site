@@ -9,10 +9,14 @@ export function parseFileCommand(input) {
     const name = input.substring(3);
     if (name.length < 1) return { error: 'Name too short' };
     if (name.length > 64) return { error: 'Name too long' };
+    if (name.includes('/')) return { error: 'Name must not contain a slash' };
     return { command: 'w', args: [name] };
   }
   if (input.startsWith(':schema ')) {
     return { command: 'schema', args: [input.substring(8)] };
+  }
+  if (input.startsWith(':share ')) {
+    return { command: 'share', args: [input.substring(7)] };
   }
   return null;
 }

@@ -99,7 +99,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
     valuesHistory: [],
     nextId: 0,
   });
-  const { load, save } = useContextGateway();
+  const { load, save, share } = useContextGateway();
 
   useEffect(() => {
     if (status === 'unnamed') {
@@ -235,6 +235,11 @@ function TodoTable({ name, status, handleBack, handleName }) {
               schema: reqSchema,
               values: state.values.map(e => mergeRow(emptyRow, e)),
             });
+          }
+        } else if (fileCmd.command === 'share') {
+          const username = fileCmd.args[0];
+          if (status === 'saved' && !name.includes('/')) {
+            share(name, username);
           }
         }
         return;

@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { ArrowLeft, FilePlus, Trash2 } from 'react-feather';
+import { useContextGateway } from './gatewayProvider';
 
-function DashTable({ rows, handleSelect, handleOpen }) {
+export function Table({ rows, columns, handleSelect, handleOpen }) {
   if (rows.length === 0) {
-    return <p class="mt-2">Click create to start a sheet</p>;
+    return <p className="mt-2">Click create to start a sheet</p>;
   }
 
   return (
     <table className="w-full mt-2">
       <thead>
         <tr>
-          <th className="px-2" width="1"></th>
-          <th className="px-2 py-1 text-left">Name</th>
-          <th className="px-2 py-1 text-right">Date modified</th>
+          <th style={{ width: 1 }}></th>
+          {columns.map(col => (
+            <th key={col.field} className={'px-2 py-1 ' + col.class || ''}>
+              {col.label ?? col.field}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
@@ -21,7 +25,7 @@ function DashTable({ rows, handleSelect, handleOpen }) {
           <tr
             key={item.name}
             className="hover:bg-paper-darker cursor-pointer"
-            onClick={ev => handleOpen(item.name)}
+            onClick={ev => handleOpen(item)}
           >
             <td className="px-2 pt-1">
               <input
@@ -30,10 +34,13 @@ function DashTable({ rows, handleSelect, handleOpen }) {
                 onChange={ev => handleSelect(item, ev.target.checked)}
               ></input>
             </td>
-            <td className="px-2 py-1">{item.name}</td>
-            <td className="px-2 py-1 text-right">
-              {new Date(item.updatedAt).toLocaleString()}
-            </td>
+            {columns.map(col => (
+              <td key={col.field} className={'px-2 py-1 ' + col.class || ''}>
+                {col.render
+                  ? col.render(item[col.field], item)
+                  : item[col.field]}
+              </td>
+            ))}
           </tr>
         ))}
       </tbody>
@@ -48,6 +55,7 @@ function Dashboard({
   handleDelete,
   handleBack,
 }) {
+  const { user } = useContextGateway();
   const [selected, setSelected] = useState([]);
   const withoutDeleted = selected.filter(e => bins.includes(e));
   if (withoutDeleted.length < selected.length) {
@@ -84,8 +92,23 @@ function Dashboard({
           <span className="font-bold text-sm uppercase mx-1">Create</span>
         </button>
       </div>
-      <DashTable
+      <Table
         rows={bins}
+        columns={[
+          {
+            field: 'name',
+            label: 'Name',
+            class: 'text-left',
+            render: (name, { username }) =>
+              user.username === username ? name : `@${username}/${name}`,
+          },
+          {
+            field: 'updatedAt',
+            label: 'Date modified',
+            class: 'text-right',
+            render: ts => new Date(ts).toLocaleString(),
+          },
+        ]}
         handleSelect={handleSelect}
         handleOpen={handleOpen}
       />

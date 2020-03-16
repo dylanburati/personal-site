@@ -107,13 +107,15 @@ function TodoApp({ query }) {
   }, [user, list]);
 
   let mainView = null;
-  if (!user || state.view === 'login') {
+  if (state.view === 'login') {
     const handleLogin = () => {
       dispatch({
         type: 'login',
       });
     };
     mainView = <LoginForm handleLogin={handleLogin} />;
+  } else if (!user) {
+    mainView = null;
   } else if (state.view === 'sheet-list') {
     const handleBack = () => {
       logout();
@@ -148,7 +150,11 @@ function TodoApp({ query }) {
         dispatch({ type: 'sheet-list-loaded', sheetList });
       });
     };
-    const handleOpen = name => {
+    const handleOpen = item => {
+      const name =
+        item.username === user.username
+          ? item.name
+          : `@${item.username}/${item.name}`;
       navigate(`?name=${name}`);
     };
     mainView = (
