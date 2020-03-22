@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useCallback,
 } from 'react';
 
 const baseUrl = 'https://relisten.xyz/jsonbin';
@@ -76,31 +77,37 @@ function useGateway() {
     typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   );
   const [user, setUser] = useState(token ? { username: null } : null);
-  const clearUser = () => {
+  const clearUser = useCallback(() => {
     setToken(null);
     setUser(null);
-  };
-  const authHttp = useMemo(() => {
-    const headers = {
-      'X-Access-Token': token,
-    };
-    const detect401 = json => {
+  }, []);
+  const detect401 = useCallback(
+    json => {
       if (!json.success && /^(Unauthorized|Network error)/.test(json.message)) {
         clearUser();
       }
       return json;
+    },
+    [clearUser]
+  );
+  const authHttp = useMemo(() => {
+    const headers = {
+      'X-Access-Token': token,
     };
     return new HttpClient(baseUrl, headers, [detect401]);
-  }, [token]);
+  }, [detect401, token]);
   useEffect(() => {
     if (token && (!user || !user.username)) {
-      authHttp.get('/me').then(json => {
-        if (json.success) {
-          setUser({ username: json.username });
-        }
-      });
+      authHttp
+        .get('/me')
+        .then(detect401)
+        .then(json => {
+          if (json.success) {
+            setUser({ username: json.username });
+          }
+        });
     }
-  }, [authHttp, token, user]);
+  }, [authHttp, detect401, token, user]);
 
   const login = async (username, password) => {
     return await http

@@ -89,7 +89,12 @@ function TodoApp({ query }) {
   }, [user, query]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      dispatch({
+        type: 'logout',
+      });
+      return;
+    }
 
     let ignore = false;
     list().then(json => {
