@@ -84,6 +84,16 @@ const IndexPage = () => {
   const personalProjects = (
     <>
       <ProjectCard
+        title="This site"
+        description="Portfolio, blog posts, and a small self-hosted todo list app"
+        technologies="Gatsby, React, GraphQL"
+      >
+        <ProjectLinks category="Todo">
+          <NavLink text="Login" href="/todo" />
+          <NavLink text="Register" href="/todo?register=1" />
+        </ProjectLinks>
+      </ProjectCard>
+      <ProjectCard
         title="Sampler"
         description="Android app for creating and playing musical instruments from samples"
         technologies="Java, JUnit, AndroidX Room, Python, PureData, Node.js"

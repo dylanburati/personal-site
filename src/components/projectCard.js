@@ -9,10 +9,12 @@ export default ({ title, description, technologies, concepts, children }) => (
         <span className="font-semibold">Technologies used: </span>
         {technologies}
       </p>
-      <p>
-        <span className="font-semibold">Concepts learned: </span>
-        {concepts}
-      </p>
+      {concepts && (
+        <p>
+          <span className="font-semibold">Concepts learned: </span>
+          {concepts}
+        </p>
+      )}
     </div>
     <div className="lg:flex-basis-1/3 p-5 border-t-2 lg:border-t-0 lg:border-l-2">
       <div className="flex flex-wrap">{children}</div>

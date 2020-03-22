@@ -1,8 +1,8 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, useCallback } from 'react';
 import { ArrowLeft } from 'react-feather';
 import PropTypes from 'prop-types';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { takeRightWhile, times, throttle } from 'lodash';
+import { takeRightWhile, times } from 'lodash';
 import TodoRow from './todoRow';
 import { parseFileCommand, parseLineCommand } from './commandParser';
 import { useContextGateway } from './gatewayProvider';
@@ -74,21 +74,56 @@ function delRows(array, start, end) {
 }
 
 function reducer(state, action) {
-  if (action.values && !action.valuesHistory) {
-    action.valuesHistory = state.valuesHistory.slice();
+  if (action.kind === 'LOAD') {
+    return {
+      ...state,
+      revisionNum: action.revisionNum,
+      schema: action.schema,
+      values: action.values,
+      nextId: action.nextId,
+    };
+  } else if (action.kind === 'SET_COMMAND') {
+    return {
+      ...state,
+      command: action.command,
+    };
+  } else if (action.kind === 'SET_SCHEMA') {
+    return {
+      ...state,
+      schema: action.schema,
+      values: action.values,
+      valuesHistory: [],
+    };
+  } else if (action.kind === 'SET_VALUES') {
+    const valuesHistory = state.valuesHistory.slice();
     const tuple = [Date.now(), state.values.slice()];
-    const prevTime = action.valuesHistory.length
-      ? action.valuesHistory[action.valuesHistory.length - 1][0]
+    const prevTime = valuesHistory.length
+      ? valuesHistory[valuesHistory.length - 1][0]
       : 0;
     if (tuple[0] - prevTime > 500) {
-      action.valuesHistory.push(tuple);
-      if (action.valuesHistory.length > 20) action.valuesHistory.splice(0, 10);
+      valuesHistory.push(tuple);
+      if (valuesHistory.length > 20) valuesHistory.splice(0, 10);
     }
+    const nextId = action.nextId ? action.nextId : state.nextId;
+    return {
+      ...state,
+      values: action.values,
+      valuesHistory,
+      nextId,
+    };
+  } else if (action.kind === 'UNDO') {
+    const past = state.valuesHistory.pop();
+    if (past) {
+      return {
+        ...state,
+        values: past[1],
+        valuesHistory: state.valuesHistory,
+      };
+    }
+    return state;
+  } else {
+    throw new Error('Unsupported action type');
   }
-  return {
-    ...state,
-    ...action,
-  };
 }
 
 function TodoTable({ name, status, handleBack, handleName }) {
@@ -101,12 +136,32 @@ function TodoTable({ name, status, handleBack, handleName }) {
   });
   const { load, save, share } = useContextGateway();
 
+  const handleLoad = useCallback(
+    data => {
+      const { schema: savedSchema, values, revisionNum } = data;
+      const schema = schemas.find(e => e.name === savedSchema.name);
+      if (Array.isArray(values) && values.every(schema.isValidRow)) {
+        dispatch({
+          kind: 'LOAD',
+          revisionNum,
+          schema,
+          values,
+          nextId: getNextId(values, 0),
+        });
+      } else {
+        handleBack();
+      }
+    },
+    [handleBack]
+  );
+
   useEffect(() => {
     if (status === 'unnamed') {
       dispatch({
+        kind: 'LOAD',
+        revisionNum: 1,
         schema: schemas[0],
         values: insertRows([], 0, times(50, schemas[0].emptyRow)),
-        valuesHistory: [],
         nextId: 50,
       });
     }
@@ -118,31 +173,21 @@ function TodoTable({ name, status, handleBack, handleName }) {
       if (!json.success) {
         return handleBack();
       } else {
-        const { schema: savedSchema, values } = json.data;
-        const schema = schemas.find(e => e.name === savedSchema.name);
-        if (Array.isArray(values) && values.every(schema.isValidRow)) {
-          dispatch({
-            schema,
-            valuesHistory: [],
-            values,
-            nextId: getNextId(values, 0),
-          });
-        } else {
-          handleBack();
-        }
+        handleLoad(json.data);
       }
     });
 
     return () => {
       ignore = true;
     };
-  }, [handleBack, name, load, status]);
+  }, [handleBack, handleLoad, name, load, status]);
 
   useEffect(() => {
     let ignore = false;
     if (status !== 'unnamed' && state.schema && state.values) {
       save(name, {
         data: {
+          revisionNum: state.revisionNum,
           schema: {
             name: state.schema.name,
             version: state.schema.version,
@@ -150,8 +195,10 @@ function TodoTable({ name, status, handleBack, handleName }) {
           values: state.values,
         },
       }).then(res => {
-        if (!ignore && res && res.success) {
-          console.log('Saved');
+        if (ignore || !res || !res.success) return;
+        console.log('Saved');
+        if (res.data) {
+          handleLoad(res.data);
         }
       });
     }
@@ -159,13 +206,15 @@ function TodoTable({ name, status, handleBack, handleName }) {
     return () => {
       ignore = true;
     };
-  }, [name, save, state.schema, state.values, status]);
+    // Use state.valuesHistory to track when local changes are entered
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleLoad, name, save, state.valuesHistory, status]);
 
   const handleChange = (rowIndex, colIndex, val) => {
     const nextValues = state.values.slice();
     nextValues[rowIndex] = nextValues[rowIndex].slice();
     nextValues[rowIndex][colIndex + 1] = val;
-    dispatch({ values: nextValues });
+    dispatch({ kind: 'SET_VALUES', values: nextValues });
   };
 
   const onDragEnd = result => {
@@ -176,7 +225,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
         const nextValues = state.values.slice();
         const [moved] = nextValues.splice(src, 1);
         nextValues.splice(dst, 0, moved);
-        dispatch({ values: nextValues });
+        dispatch({ kind: 'SET_VALUES', values: nextValues });
       }
     }
   };
@@ -189,13 +238,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
   };
 
   const handleUndo = () => {
-    const past = state.valuesHistory.pop();
-    if (past) {
-      dispatch({
-        values: past[1],
-        valuesHistory: state.valuesHistory,
-      });
-    }
+    dispatch({ kind: 'UNDO' });
   };
 
   const handleCmd = cmd => {
@@ -232,6 +275,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
           if (reqSchema) {
             const emptyRow = reqSchema.emptyRow(0);
             dispatch({
+              kind: 'SET_SCHEMA',
               schema: reqSchema,
               values: state.values.map(e => mergeRow(emptyRow, e)),
             });
@@ -259,6 +303,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
         if (lineCmd.command === 'i') {
           const count = lineCmd.args[0];
           dispatch({
+            kind: 'SET_VALUES',
             values: insertRows(
               state.values,
               lineCmd.range.start - 1,
@@ -268,6 +313,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
           });
         } else if (lineCmd.command === 'm') {
           dispatch({
+            kind: 'SET_VALUES',
             values: moveRows(
               state.values,
               lineCmd.range.start - 1,
@@ -277,6 +323,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
           });
         } else if (lineCmd.command === 'd') {
           dispatch({
+            kind: 'SET_VALUES',
             values: delRows(
               state.values,
               lineCmd.range.start - 1,
@@ -286,7 +333,7 @@ function TodoTable({ name, status, handleBack, handleName }) {
         }
       }
     } finally {
-      dispatch({ command: '' });
+      dispatch({ kind: 'SET_COMMAND', command: '' });
     }
   };
 
@@ -307,7 +354,9 @@ function TodoTable({ name, status, handleBack, handleName }) {
           className="p-2 font-mono text-sm flex-grow text-white ml-3"
           style={{ backgroundColor: 'var(--dark-color-paper-darker)' }}
           value={state.command}
-          onChange={ev => dispatch({ command: ev.target.value })}
+          onChange={ev =>
+            dispatch({ kind: 'SET_COMMAND', command: ev.target.value })
+          }
           onKeyDown={handleCmdlineKey}
         ></input>
       </div>
