@@ -2,51 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { ArrowLeft, FilePlus, Trash2 } from 'react-feather';
 import { useContextGateway } from './gatewayProvider';
-
-export function Table({ rows, columns, handleSelect, handleOpen }) {
-  if (rows.length === 0) {
-    return <p className="mt-2">Click create to start a sheet</p>;
-  }
-
-  return (
-    <table className="w-full mt-2">
-      <thead>
-        <tr>
-          <th style={{ width: 1 }}></th>
-          {columns.map(col => (
-            <th key={col.field} className={'px-2 py-1 ' + col.class || ''}>
-              {col.label ?? col.field}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(item => (
-          <tr
-            key={item.name}
-            className="hover:bg-paper-darker cursor-pointer"
-            onClick={ev => handleOpen(item)}
-          >
-            <td className="px-2 pt-1">
-              <input
-                type="checkbox"
-                onClick={ev => ev.stopPropagation()}
-                onChange={ev => handleSelect(item, ev.target.checked)}
-              ></input>
-            </td>
-            {columns.map(col => (
-              <td key={col.field} className={'px-2 py-1 ' + col.class || ''}>
-                {col.render
-                  ? col.render(item[col.field], item)
-                  : item[col.field]}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+import Table from '../table';
 
 function Dashboard({
   bins,
@@ -111,6 +67,8 @@ function Dashboard({
         ]}
         handleSelect={handleSelect}
         handleOpen={handleOpen}
+        keyField="name"
+        noDataText="Click create to start a sheet"
       />
     </div>
   );

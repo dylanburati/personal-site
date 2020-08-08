@@ -204,7 +204,7 @@ const TodoPage = ({ location }) => {
     <Layout navLinks={[{ text: 'Blog', href: '/blog' }]}>
       <SEO title="Todo" />
 
-      <GatewayProvider>
+      <GatewayProvider collectionName="todo">
         <TodoApp query={location.search} />
       </GatewayProvider>
     </Layout>

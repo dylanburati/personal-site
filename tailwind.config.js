@@ -26,6 +26,14 @@ module.exports = {
         700: 'var(--color-accent-700)',
         200: 'var(--color-accent-200)',
       },
+      green: {
+        default: 'var(--color-green)',
+        500: colors.green['500'],
+        600: colors.green['600'],
+      },
+      red: {
+        500: colors.red['500'],
+      },
       danger: colors.red['700'],
       navy: {
         default: '#01477b',
@@ -35,6 +43,7 @@ module.exports = {
     extend: {
       maxWidth: {
         '1/2': '50%',
+        '3/4': '75%',
       },
     },
   },

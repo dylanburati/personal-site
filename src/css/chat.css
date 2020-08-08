@@ -1,0 +1,36 @@
+.scrollbar-dark {
+  scrollbar-color: var(--color-paper) var(--color-paper-dark)
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: var(--color-paper)
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: var(--color-paper-dark)
+}
+
+
+.chat-message {
+  @apply max-w-3/4;
+}
+
+.chat-message label {
+  @apply block;
+}
+
+.chat-message p {
+  @apply rounded whitespace-pre-wrap break-words inline-block max-w-full;
+}
+
+.chat-message-mine {
+  @apply text-right;
+}
+
+.chat-message-mine p {
+  @apply bg-paper-dark text-left;
+}
+
+.chat-message-theirs p {
+  @apply bg-green text-white;
+}
