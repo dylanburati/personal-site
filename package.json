@@ -16,6 +16,7 @@
     "@vx/responsive": "0.0.198",
     "@vx/scale": "0.0.198",
     "@vx/shape": "0.0.198",
+    "@vx/tooltip": "0.0.198",
     "gatsby": "^2.24.34",
     "gatsby-image": "^2.2.23",
     "gatsby-plugin-manifest": "^2.2.20",
@@ -33,6 +34,7 @@
     "react-dom": "^16.9.0",
     "react-feather": "^2.0.3",
     "react-helmet": "^5.2.1",
+    "react-move": "^6.4.0",
     "rehype-react": "^4.0.1",
     "tailwindcss": "^1.1.2"
   },

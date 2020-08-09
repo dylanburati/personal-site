@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useReducer, useEffect } from 'react';
-import * as allCurves from '@vx/curve';
+import React, { useState, useMemo, useReducer, useRef, useEffect } from 'react';
+import { curveLinear } from '@vx/curve';
 import { ParentSize } from '@vx/responsive';
 import { Group } from '@vx/group';
 import { Grid } from '@vx/grid';
@@ -8,7 +8,10 @@ import { AxisBottom, AxisLeft } from '@vx/axis';
 import { scaleLinear, scaleBand } from '@vx/scale';
 import { LinearGradient } from '@vx/gradient';
 import { Drag } from '@vx/drag';
+import { withTooltip, Tooltip, defaultStyles, useTooltip } from '@vx/tooltip';
 import { clamp, partition, takeWhile } from 'lodash';
+import { NodeGroup } from 'react-move';
+import { opacity, backgroundColor } from 'tailwindcss/defaultTheme';
 
 export function CircleButton({ onClick, active, disabled, children }) {
   let classes = 'bg-paper-darker hover:bg-paper-dark';
@@ -86,13 +89,26 @@ export function RankGrid({ rows, columns }) {
   );
 }
 
-export const LineGraphContainer = props => (
-  <ParentSize>
-    {parent => (
-      <LineGraph width={parent.width} height={parent.height} {...props} />
-    )}
-  </ParentSize>
-);
+export const LineGraphContainer = props => {
+  const [series, setSeries] = useState([]);
+  const allPointsDone = series.length === props.keys.length;
+  const { referenceData, ...restProps } = props;
+
+  return (
+    <ParentSize>
+      {parent => (
+        <LineGraph
+          width={parent.width}
+          height={parent.height}
+          series={series}
+          setSeries={setSeries}
+          referenceData={allPointsDone ? referenceData : []}
+          {...restProps}
+        />
+      )}
+    </ParentSize>
+  );
+};
 
 // const lineCount = 10;
 // const seriesLength = 7;
@@ -126,6 +142,321 @@ const useStateNoCmp = init => {
   ];
 };
 
+const useHoverStates = ({ keyAccessor }) => {
+  const [hoveringItems, setHoveringItems] = useStateNoCmp(new Set());
+  return {
+    handleMouseEnter: d => ev => {
+      setHoveringItems(hoveringItems.add(keyAccessor(d)));
+    },
+    handleMouseLeave: d => ev => {
+      if (hoveringItems.delete(keyAccessor(d))) setHoveringItems(hoveringItems);
+    },
+    getHoverState: d => hoveringItems.has(keyAccessor(d)),
+    clearHoverStates: () => {
+      if (hoveringItems.size) setHoveringItems(new Set());
+    },
+  };
+};
+
+export const GridAndAxes = ({ top, left, width, height, xScale, yScale }) => (
+  <Group top={top} left={left}>
+    <Grid
+      xScale={xScale}
+      yScale={yScale}
+      width={width}
+      height={height}
+      stroke="rgba(255,255,255,0.2)"
+      xOffset={xScale.bandwidth() / 2}
+    />
+    <AxisBottom
+      top={height}
+      scale={xScale}
+      // tickFormat={formatDate}
+      stroke="#ffffff"
+      tickStroke="rgba(255,255,255,0.5)"
+      tickLabelProps={() => ({
+        fill: '#ffffff',
+        fontSize: 14,
+        textAnchor: 'middle',
+        className: 'select-none',
+      })}
+    />
+    <AxisLeft
+      scale={yScale}
+      // tickFormat={formatDate}
+      stroke="#ffffff"
+      hideTicks
+      numTicks={Math.round(height / 35)}
+      tickLabelProps={() => ({
+        fill: '#ffffff',
+        fontSize: 14,
+        textAnchor: 'end',
+        dy: '0.33em',
+        className: 'select-none',
+      })}
+    />
+  </Group>
+);
+
+const pointRadius = 5;
+/**
+ * @param {import('@vx/drag/lib/Drag').DragProps & { enabled: boolean }} param0 props
+ */
+export const DragContainer = ({
+  enabled,
+  width,
+  height,
+  onDragStart,
+  onDragEnd,
+  children,
+}) => {
+  if (!enabled) {
+    return (
+      <>
+        {children({
+          dragStart: () => {},
+          dragEnd: () => {},
+          dragMove: () => {},
+          isDragging: false,
+          dx: 0,
+          dy: 0,
+        })}
+      </>
+    );
+  }
+
+  return (
+    <Drag
+      resetOnStart
+      width={width}
+      height={height}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      {children}
+    </Drag>
+  );
+};
+
+export const LineSeries = ({
+  top,
+  left,
+  width,
+  height,
+  opacity,
+  xScale,
+  yScale,
+  stroke,
+  fill,
+  name,
+  series,
+  setSeries,
+  getX,
+  getY,
+  xOffset = 0,
+  yOffset = 0,
+  enableDrag = false,
+  shouldShowPoints = true,
+  shouldShowTooltip = false,
+  tooltip = {},
+}) => {
+  const {
+    handleMouseEnter,
+    handleMouseLeave,
+    getHoverState,
+    clearHoverStates,
+  } = useHoverStates({
+    keyAccessor: d => d.id,
+  });
+  const { tooltipTimeout, hideTooltip, showTooltip } = tooltip;
+  const [dragData, setDragData] = useStateNoCmp(new Map());
+  const keys = xScale.domain();
+  const keyToXIndex = useMemo(() => new Map(keys.map((k, idx) => [k, idx])), [
+    keys,
+  ]);
+  const diff = ([v1, v2]) => v2 - v1;
+  const yScaleFactor = diff(yScale.range()) / diff(yScale.domain());
+
+  const scaleInvert = ({ x, y }) => {
+    const gridX = x - left;
+    const rangeX =
+      gridX - xScale.paddingOuter() * xScale.step() - 0.5 * xScale.bandwidth();
+    const rangeY = y - top;
+    const index = Math.round(rangeX / xScale.step());
+    return {
+      xIndex: index,
+      x: index >= 0 && index < keys.length ? keys[index] : undefined,
+      y: yScale.invert(rangeY),
+    };
+  };
+  const getMouseDistance = ({ d, x, y }) => {
+    const gridX = x - left;
+    const gridY = y - top;
+    const xdist = xScale(getX(d)) + xOffset - gridX;
+    const ydist = yScale(getY(d)) + yOffset - gridY;
+    return { xdist, ydist };
+  };
+
+  const [dragPoints, nonDragPoints] = partition(
+    shouldShowPoints ? series : [],
+    d => dragData.has(d.id)
+  );
+  return (
+    <Group top={top} left={left} opacity={opacity}>
+      <DragContainer
+        top={top}
+        left={left}
+        width={width}
+        height={height}
+        enabled={enableDrag}
+        onDragStart={({ x, y }) => {
+          const location = scaleInvert({ x, y });
+          if (location.x === undefined) return;
+
+          const before = takeWhile(
+            series,
+            e => keyToXIndex.get(e.x) < location.xIndex
+          );
+          let point =
+            before.length < series.length ? series[before.length] : null;
+          if (!point || point.x !== location.x) {
+            const d = {
+              id: location.xIndex.toString(),
+              x: location.x,
+              y: location.y,
+            };
+            setDragData(dragData.set(d.id, 0));
+            setSeries([...before, d, ...series.slice(before.length)]);
+          } else {
+            const { xdist, ydist } = getMouseDistance({ d: point, x, y });
+            if (xdist * xdist + Math.min(24, ydist * ydist) <= 49) {
+              point.y = location.y;
+              setDragData(dragData.set(point.id, 0));
+              setSeries([...series]);
+            }
+          }
+        }}
+        onDragEnd={({ dx, dy }) => {
+          const delta = dy / yScaleFactor;
+          const [min, max] = yScale.domain();
+          const dragPoints = series.filter(d => dragData.has(d.id));
+          dragPoints.forEach(d => {
+            d.y = clamp(d.y + delta, min, max);
+            dragData.delete(d.id);
+          });
+          setSeries([...series]);
+          setDragData(dragData);
+        }}
+      >
+        {({ dragStart, dragEnd, dragMove, isDragging, dx, dy }) => {
+          if (isDragging) {
+            let someChanged = false;
+            dragData.forEach((prevDelta, k) => {
+              if (prevDelta !== dy) {
+                someChanged = true;
+                dragData.set(k, dy);
+              }
+            });
+            if (someChanged) setDragData(dragData);
+          }
+          return (
+            <>
+              <LinePath
+                curve={curveLinear}
+                data={series}
+                x={d => xScale(getX(d)) + xOffset}
+                y={d => yScale(getY(d)) + yOffset + (dragData.get(d.id) || 0)}
+                stroke={stroke}
+                strokeWidth={1.5}
+                shapeRendering="geometricPrecision"
+              />
+              {dragPoints.map((d, i) => (
+                <circle
+                  key={`dragging-${i}`}
+                  r={pointRadius}
+                  cx={xScale(getX(d)) + xOffset}
+                  cy={yScale(getY(d)) + yOffset}
+                  transform={`translate(0, ${dy})`}
+                  stroke={stroke}
+                  fill={fill}
+                />
+              ))}
+              {enableDrag && (
+                <rect
+                  width={width + 2 * pointRadius}
+                  height={height + 2 * pointRadius}
+                  transform={`translate(${-pointRadius}, ${-pointRadius})`}
+                  fill="transparent"
+                  onMouseDown={dragStart}
+                  onMouseMove={dragMove}
+                  onMouseUp={dragEnd}
+                  onMouseLeave={ev => {
+                    dragEnd(ev);
+                    clearHoverStates();
+                  }}
+                  onTouchStart={dragStart}
+                  onTouchMove={dragMove}
+                  onTouchEnd={ev => {
+                    dragEnd(ev);
+                    clearHoverStates();
+                  }}
+                />
+              )}
+              {nonDragPoints.map((d, i) => (
+                <circle
+                  key={i}
+                  r={pointRadius}
+                  cx={xScale(getX(d)) + xOffset}
+                  cy={yScale(getY(d)) + yOffset}
+                  transform={
+                    dragData.has(d.id) ? `translate(0, ${dy})` : undefined
+                  }
+                  onMouseDown={dragStart}
+                  onMouseUp={dragEnd}
+                  onMouseEnter={handleMouseEnter(d)}
+                  onMouseMove={ev => {
+                    dragMove(ev);
+                    if (!shouldShowTooltip) return;
+                    if (tooltipTimeout && tooltipTimeout.current) {
+                      clearTimeout(tooltipTimeout.current);
+                      tooltipTimeout.current = null;
+                    }
+                    showTooltip({
+                      tooltipLeft: xScale(getX(d)) + xOffset,
+                      tooltipTop: yScale(getY(d)) + yOffset + 24,
+                      tooltipData: {
+                        name,
+                        stroke,
+                        fill,
+                        point: d,
+                      },
+                    });
+                  }}
+                  onMouseLeave={ev => {
+                    handleMouseLeave(d)(ev);
+                    if (tooltipTimeout) {
+                      tooltipTimeout.current = window.setTimeout(() => {
+                        hideTooltip();
+                      }, 300);
+                    }
+                  }}
+                  onTouchStart={dragStart}
+                  onTouchMove={dragMove}
+                  onTouchEnd={dragEnd}
+                  stroke={stroke}
+                  strokeOpacity={getHoverState(d) ? 1 : 0.7}
+                  fill={fill}
+                  fillOpacity={getHoverState(d) ? 0.4 : 0.1}
+                />
+              ))}
+            </>
+          );
+        }}
+      </DragContainer>
+    </Group>
+  );
+};
+
 export function LineGraph({
   width,
   height,
@@ -137,11 +468,17 @@ export function LineGraph({
   rangeMax = 1,
   keys,
   referenceData = [],
+  series,
+  setSeries,
 }) {
-  const [curveType, setCurveType] = useState('curveLinear');
-  const [series, setSeries] = useState([]);
-
-  // update scale output ranges
+  const tooltipHookReturn = useTooltip();
+  const {
+    tooltipOpen,
+    tooltipLeft,
+    tooltipTop,
+    tooltipData,
+  } = tooltipHookReturn;
+  const tooltipTimeout = useRef(null);
   const xScale = useMemo(
     () =>
       scaleBand({
@@ -157,36 +494,18 @@ export function LineGraph({
       }),
     [rangeMax, rangeMin]
   );
-  const keyToXIndex = useMemo(() => new Map(keys.map((k, idx) => [k, idx])), [
-    keys,
-  ]);
-  const [cancelDragEvent, setCancelDragEvent] = useState(null);
-  const [dragData, setDragData] = useStateNoCmp(new Map());
-  const [hoveringItems, setHoveringItems] = useStateNoCmp(new Set());
   const xMax = width - marginRight - marginLeft;
   xScale.range([0, xMax]);
   const yMax = height - marginBottom - marginTop;
   yScale.range([yMax, 0]);
-  const diff = ([v1, v2]) => v2 - v1;
-  const yScaleFactor = diff(yScale.range()) / diff(yScale.domain());
-
-  useEffect(() => {
-    if (cancelDragEvent) setCancelDragEvent(null);
-  }, [cancelDragEvent]);
 
   if (height < 10) return null;
 
   const getX = d => d.x;
   const getY = d => d.y;
-  const getYWithDragOffset = d => d.y + (dragData.get(d.id) || 0);
 
-  const getBandCenterX = d => xScale(getX(d)) + xScale.bandwidth() / 2;
-
-  const [dragPoints, nonDragPoints] = partition(series, d =>
-    dragData.has(d.id)
-  );
   return (
-    <div className="vx-curves-demo">
+    <div className="relative">
       <svg width={width} height={height}>
         <LinearGradient
           id="sunbather"
@@ -201,211 +520,89 @@ export function LineGraph({
           rx={14}
           ry={14}
         />
-        <Grid
+        <GridAndAxes
           top={marginTop}
           left={marginLeft}
-          xScale={xScale}
-          yScale={yScale}
           width={xMax}
           height={yMax}
-          stroke="rgba(255,255,255,0.2)"
-          xOffset={xScale.bandwidth() / 2}
+          xScale={xScale}
+          yScale={yScale}
         />
-        {referenceData.map((lineData, seriesIdx) => (
-          <Group key={`lines-${seriesIdx}`} top={marginTop} left={marginLeft}>
-            <LinePath
-              curve={allCurves[curveType]}
-              data={lineData}
-              x={d => getBandCenterX(d)}
-              y={d => yScale(getY(d))}
-              stroke="#ffffff"
-              strokeWidth={1.5}
-              shapeRendering="geometricPrecision"
-            />
-          </Group>
-        ))}
-        <AxisBottom
-          top={height - marginBottom}
-          left={marginLeft}
-          scale={xScale}
-          // tickFormat={formatDate}
-          stroke="#ffffff"
-          tickStroke="rgba(255,255,255,0.5)"
-          tickLabelProps={() => ({
-            fill: '#ffffff',
-            fontSize: 14,
-            textAnchor: 'middle',
-            className: 'select-none',
-          })}
-        />
-        <AxisLeft
+        <LineSeries
+          name="Editable"
           top={marginTop}
           left={marginLeft}
-          scale={yScale}
-          // tickFormat={formatDate}
-          stroke="#ffffff"
-          hideTicks
-          numTicks={Math.round(height / 35)}
-          tickStroke="rgba(255,255,255,0.5)"
-          tickLabelProps={() => ({
-            fill: '#ffffff',
-            fontSize: 14,
-            textAnchor: 'end',
-            dy: '0.33em',
-            className: 'select-none',
-          })}
+          width={xMax}
+          height={yMax}
+          xScale={xScale}
+          yScale={yScale}
+          getX={getX}
+          getY={getY}
+          xOffset={xScale.bandwidth() / 2}
+          stroke="white"
+          fill="white"
+          series={series}
+          setSeries={setSeries}
+          enableDrag
         />
-        <Group top={marginTop} left={marginLeft} width={xMax} height={yMax}>
-          <LinePath
-            curve={allCurves[curveType]}
-            data={series}
-            x={d => getBandCenterX(d)}
-            y={d => yScale(getYWithDragOffset(d))}
-            stroke="#ffffff"
-            strokeWidth={1.5}
-            shapeRendering="geometricPrecision"
-          />
-          <Drag
-            resetOnStart
-            width={xMax}
-            height={yMax}
-            onDragStart={({ x, y }) => {
-              const gridX = x - marginLeft;
-              const offsetX =
-                gridX -
-                xScale.paddingOuter() * xScale.step() -
-                0.5 * xScale.bandwidth();
-              const offsetY = y - marginTop;
-              const index = Math.round(offsetX / xScale.step());
-              if (index < 0 || index >= keys.length) {
-                return;
-              }
-
-              const pointIdx = series.findIndex(d => d.x === keys[index]);
-              if (pointIdx >= 0) {
-                const d = series[pointIdx];
-                const xdist = getBandCenterX(d) - gridX;
-                const ydist = yScale(getY(d)) - offsetY;
-                console.log(xdist, ydist);
-                if (xdist * xdist + Math.min(24, ydist * ydist) <= 49) {
-                  d.y = yScale.invert(offsetY);
-                  setDragData(dragData.set(d.id, 0));
-                  setSeries([...series]);
-                }
-              } else {
-                const d = {
-                  id: index.toString(),
-                  x: keys[index],
-                  y: yScale.invert(offsetY),
-                };
-                const before = takeWhile(
-                  series,
-                  e => keyToXIndex.get(e.x) < index
-                );
-                setDragData(dragData.set(d.id, 0));
-                setSeries([...before, d, ...series.slice(before.length)]);
-              }
-            }}
-            onDragEnd={({ dx, dy }) => {
-              const delta = dy / yScaleFactor;
-              const [min, max] = yScale.domain();
-              dragPoints.forEach(d => {
-                d.y = clamp(d.y + delta, min, max);
-                dragData.delete(d.id);
-              });
-              setSeries([...series]);
-              setDragData(dragData);
-            }}
-          >
-            {({ dragStart, dragEnd, dragMove, isDragging, dx, dy }) => {
-              const delta = dy / yScaleFactor;
-              if (isDragging) {
-                let someChanged = false;
-                dragData.forEach((prevDelta, k) => {
-                  if (prevDelta !== delta) {
-                    someChanged = true;
-                    dragData.set(k, delta);
-                  }
-                });
-                if (someChanged) setDragData(dragData);
-
-                // if (cancelDragEvent) dragEnd(cancelDragEvent);
-              }
-              return (
-                <g>
-                  {dragPoints.map((d, i) => (
-                    <circle
-                      key={i}
-                      r={5}
-                      stroke="white"
-                      fill="white"
-                      transform={`translate(0, ${dy})`}
-                      cx={getBandCenterX(d)}
-                      cy={yScale(getY(d))}
-                    />
-                  ))}
-                  <rect
-                    width={xMax + 10}
-                    height={yMax + 10}
-                    transform="translate(-5, -5)"
-                    fill="transparent"
-                    onMouseDown={dragStart}
-                    onMouseMove={dragMove}
-                    onMouseUp={dragEnd}
-                    onMouseLeave={ev => {
-                      dragEnd(ev);
-                      if (hoveringItems.size) {
-                        hoveringItems.clear();
-                        setHoveringItems(hoveringItems);
-                      }
-                    }}
-                    onTouchStart={dragStart}
-                    onTouchMove={dragMove}
-                    onTouchEnd={ev => {
-                      dragEnd(ev);
-                      if (hoveringItems.size) {
-                        hoveringItems.clear();
-                        setHoveringItems(hoveringItems);
-                      }
-                    }}
-                  />
-                  {nonDragPoints.map((d, i) => (
-                    <circle
-                      key={i}
-                      r={5}
-                      cx={getBandCenterX(d)}
-                      cy={yScale(getY(d))}
-                      onMouseEnter={() =>
-                        setHoveringItems(hoveringItems.add(d.id))
-                      }
-                      onMouseLeave={() => {
-                        if (hoveringItems.delete(d.id))
-                          setHoveringItems(hoveringItems);
-                      }}
-                      stroke={
-                        hoveringItems.has(d.id)
-                          ? 'rgba(255,255,255,0.8)'
-                          : 'rgba(255,255,255,0.4)'
-                      }
-                      fill={
-                        hoveringItems.has(d.id)
-                          ? 'rgba(255,255,255,0.2)'
-                          : 'transparent'
-                      }
-                      onMouseDown={dragStart}
-                      onMouseMove={dragMove}
-                      onMouseUp={dragEnd}
-                      onTouchStart={dragStart}
-                      onTouchMove={dragMove}
-                      onTouchEnd={dragEnd}
-                    />
-                  ))}
-                </g>
-              );
-            }}
-          </Drag>
-        </Group>
+        <NodeGroup
+          data={referenceData}
+          keyAccessor={e => e.name}
+          start={() => ({ opacity: 0 })}
+          enter={() => ({ opacity: [1], timing: { duration: 500 } })}
+        >
+          {nodes => (
+            <>
+              {nodes.map(({ key, data, state }) => (
+                <LineSeries
+                  key={`reference-${key}`}
+                  name={data.name}
+                  opacity={state.opacity}
+                  top={marginTop}
+                  left={marginLeft}
+                  width={xMax}
+                  height={yMax}
+                  xScale={xScale}
+                  yScale={yScale}
+                  getX={getX}
+                  getY={getY}
+                  xOffset={xScale.bandwidth() / 2}
+                  stroke={data.stroke}
+                  fill={data.fill}
+                  series={data.series}
+                  shouldShowTooltip={data.showTooltip}
+                  tooltip={{ ...tooltipHookReturn, tooltipTimeout }}
+                />
+              ))}
+            </>
+          )}
+        </NodeGroup>
       </svg>
+      {tooltipOpen && tooltipData && (
+        <Tooltip
+          top={tooltipTop}
+          left={tooltipLeft}
+          className="bg-paper"
+          style={{
+            ...defaultStyles,
+            backgroundColor: 'var(--dark-color-paper)',
+            color: 'var(--dark-color-pen)',
+            minWidth: 60,
+            lineHeight: 1.5,
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                color: tooltipData.fill || 'inherit',
+              }}
+            >
+              {tooltipData.name}:
+            </strong>{' '}
+            {Math.round(tooltipData.point.y * 1000) / 1000}
+          </div>
+        </Tooltip>
+      )}
     </div>
   );
 }
@@ -446,11 +643,17 @@ export default function GuessrPage() {
             rangeMin={0}
             rangeMax={1}
             referenceData={[
-              ordinalKeys.map((x, i) => ({
-                id: i.toString(),
-                x,
-                y: Math.random(),
-              })),
+              {
+                name: 'Source',
+                showTooltip: true,
+                stroke: '#62ea86',
+                fill: '#62ea86',
+                series: ordinalKeys.map((x, i) => ({
+                  id: `source${i}`,
+                  x,
+                  y: Math.random(),
+                })),
+              },
             ]}
           />
         </div>
