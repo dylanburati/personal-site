@@ -16,7 +16,8 @@ export const UserContext = React.createContext({
   token: null,
   authHttp: null,
   user: null,
-  createUser: () => {},
+  createGuest: () => {},
+  register: () => {},
   login: () => {},
   logout: () => {},
 });
@@ -60,11 +61,8 @@ export function UserProvider(props) {
     }
   }, [authHttp, detect401, token, user]);
 
-  const createUser = async (username, password) => {
-    const json = await http.post('/u', {
-      username,
-      password,
-    });
+  const createUser = async input => {
+    const json = await http.post('/u', input);
     if (json.success) {
       localStorage.setItem('auth_token', json.token);
       setToken(json.token);
@@ -72,6 +70,8 @@ export function UserProvider(props) {
     }
     return json;
   };
+  const register = (username, password) => createUser({ username, password });
+  const createGuest = () => createUser({ isGuest: true });
   const login = async (username, password) => {
     const json = await http.post('/login', {
       username,
@@ -97,7 +97,8 @@ export function UserProvider(props) {
         token,
         authHttp,
         user,
-        createUser,
+        createGuest,
+        register,
         login,
         logout,
       }}

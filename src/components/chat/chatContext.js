@@ -17,7 +17,7 @@ export const ChatContext = React.createContext({
 const wsUrl = 'ws://localhost:7000/ws';
 export function ChatProvider({ children }) {
   const { location } = globalHistory;
-  const { token } = useContext(UserContext);
+  const { createGuest, token } = useContext(UserContext);
   const [roomId] = useState(() => {
     const { room } = qs.parse(location.search.replace(/^\?/, ''));
     return room;
@@ -25,17 +25,25 @@ export function ChatProvider({ children }) {
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
 
+  useEffect(() => {
+    if (roomId && !token) {
+      createGuest();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, token]);
+
   const [, onConnect] = useReducer(n => n + 1, 0);
   const [wsClient, setWsClient] = useState();
-  const connect = useAsyncTask(async (nickname = null) => {
+  const connect = useAsyncTask(async () => {
     const nextClient = new WSClient(`${wsUrl}/${roomId}`, onConnect, onConnect);
     const msg = await nextClient.sendAndListen({
       action: 'login',
-      data: { token, nickname },
+      data: { token },
     });
     setWsClient(nextClient);
     setRoomTitle(msg.title);
     setNickname(msg.nickname);
+    if (msg.isFirstLogin) console.log('prompt');
   });
   useEffect(() => {
     if (roomId && token && !wsClient && !connect.loading) {
