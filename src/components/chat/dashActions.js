@@ -28,13 +28,13 @@ function CreateForm({ handleLogin }) {
 
   return (
     <div>
-      <form onSubmit={handleCreate} className="flex flex-wrap mt-3">
+      <form onSubmit={handleCreate} className="flex flex-wrap -m-1 mt-2">
         <input
           name="title"
           placeholder="Enter a title for the room"
           type="text"
           autoComplete="off"
-          className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 mb-2 sm:mb-0 mr-2"
+          className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 m-1"
           value={reqTitle}
           onChange={ev => {
             setErrorMessage(undefined);
@@ -46,7 +46,7 @@ function CreateForm({ handleLogin }) {
           placeholder="Enter a username for yourself"
           type="text"
           autoComplete="off"
-          className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 mb-2 sm:mb-0 mr-2"
+          className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 m-1"
           value={reqNickname}
           onChange={ev => {
             setErrorMessage(undefined);
@@ -55,7 +55,7 @@ function CreateForm({ handleLogin }) {
         />
         <button
           type="submit"
-          className="w-full sm:w-auto bg-accent-200 hover:bg-accent text-white py-1 px-3 rounded"
+          className="w-full sm:w-auto bg-accent-200 hover:bg-accent text-white py-1 px-3 m-1 rounded"
         >
           Go!
         </button>

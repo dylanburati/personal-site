@@ -30,7 +30,7 @@ function QuipApp() {
     );
   }
   return (
-    <ScreenWrapper className="container mx-auto" innerClassName="px-5">
+    <ScreenWrapper className="px-5" innerClassName="container mx-auto">
       <ChatProvider>
         <Chat />
       </ChatProvider>
