@@ -8,10 +8,11 @@ import { AxisBottom, AxisLeft } from '@vx/axis';
 import { scaleLinear, scaleBand } from '@vx/scale';
 import { LinearGradient } from '@vx/gradient';
 import { Drag } from '@vx/drag';
-import { withTooltip, Tooltip, defaultStyles, useTooltip } from '@vx/tooltip';
+import { Tooltip, defaultStyles, useTooltip } from '@vx/tooltip';
 import { clamp, partition, takeWhile } from 'lodash';
 import { NodeGroup } from 'react-move';
-import { opacity, backgroundColor } from 'tailwindcss/defaultTheme';
+
+import '../css/styles.css';
 
 export function CircleButton({ onClick, active, disabled, children }) {
   let classes = 'bg-paper-darker hover:bg-paper-dark';
@@ -95,7 +96,7 @@ export const LineGraphContainer = props => {
   const { referenceData, ...restProps } = props;
 
   return (
-    <ParentSize>
+    <ParentSize className="touch-action-none">
       {parent => (
         <LineGraph
           width={parent.width}
@@ -270,6 +271,10 @@ export const LineSeries = ({
   });
   const { tooltipTimeout, hideTooltip, showTooltip } = tooltip;
   const [dragData, setDragData] = useStateNoCmp(new Map());
+  useEffect(() => {
+    if (!enableDrag && dragData.size) setDragData(new Map());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableDrag]);
   const keys = xScale.domain();
   const keyToXIndex = useMemo(() => new Map(keys.map((k, idx) => [k, idx])), [
     keys,
@@ -297,10 +302,11 @@ export const LineSeries = ({
     return { xdist, ydist };
   };
 
-  const [dragPoints, nonDragPoints] = partition(
+  const [newPoints, establishedPoints] = partition(
     shouldShowPoints ? series : [],
-    d => dragData.has(d.id)
+    d => (dragData.get(d.id) || {}).isNew
   );
+  const getDragYOffset = d => (dragData.get(d.id) || { dy: 0 }).dy;
   return (
     <Group top={top} left={left} opacity={opacity}>
       <DragContainer
@@ -325,13 +331,13 @@ export const LineSeries = ({
               x: location.x,
               y: location.y,
             };
-            setDragData(dragData.set(d.id, 0));
+            setDragData(dragData.set(d.id, { isNew: true, dy: 0 }));
             setSeries([...before, d, ...series.slice(before.length)]);
           } else {
             const { xdist, ydist } = getMouseDistance({ d: point, x, y });
             if (xdist * xdist + Math.min(24, ydist * ydist) <= 49) {
               point.y = location.y;
-              setDragData(dragData.set(point.id, 0));
+              setDragData(dragData.set(point.id, { dy: 0 }));
               setSeries([...series]);
             }
           }
@@ -351,10 +357,10 @@ export const LineSeries = ({
         {({ dragStart, dragEnd, dragMove, isDragging, dx, dy }) => {
           if (isDragging) {
             let someChanged = false;
-            dragData.forEach((prevDelta, k) => {
-              if (prevDelta !== dy) {
+            dragData.forEach((prev, k) => {
+              if (prev.dy !== dy) {
                 someChanged = true;
-                dragData.set(k, dy);
+                dragData.set(k, { ...prev, dy });
               }
             });
             if (someChanged) setDragData(dragData);
@@ -365,12 +371,12 @@ export const LineSeries = ({
                 curve={curveLinear}
                 data={series}
                 x={d => xScale(getX(d)) + xOffset}
-                y={d => yScale(getY(d)) + yOffset + (dragData.get(d.id) || 0)}
+                y={d => yScale(getY(d)) + yOffset + getDragYOffset(d)}
                 stroke={stroke}
                 strokeWidth={1.5}
                 shapeRendering="geometricPrecision"
               />
-              {dragPoints.map((d, i) => (
+              {newPoints.map((d, i) => (
                 <circle
                   key={`dragging-${i}`}
                   r={pointRadius}
@@ -402,7 +408,7 @@ export const LineSeries = ({
                   }}
                 />
               )}
-              {nonDragPoints.map((d, i) => (
+              {establishedPoints.map((d, i) => (
                 <circle
                   key={i}
                   r={pointRadius}
@@ -443,10 +449,38 @@ export const LineSeries = ({
                   onTouchStart={dragStart}
                   onTouchMove={dragMove}
                   onTouchEnd={dragEnd}
+                  onFocus={ev => {
+                    if (!shouldShowTooltip) return;
+                    if (tooltipTimeout && tooltipTimeout.current) {
+                      clearTimeout(tooltipTimeout.current);
+                      tooltipTimeout.current = null;
+                    }
+                    showTooltip({
+                      tooltipLeft: xScale(getX(d)) + xOffset,
+                      tooltipTop: yScale(getY(d)) + yOffset + 24,
+                      tooltipData: {
+                        name,
+                        stroke,
+                        fill,
+                        point: d,
+                      },
+                    });
+                  }}
+                  onBlur={ev => {
+                    if (shouldShowTooltip) {
+                      tooltipTimeout.current = window.setTimeout(() => {
+                        hideTooltip();
+                      }, 0);
+                    }
+                  }}
                   stroke={stroke}
-                  strokeOpacity={getHoverState(d) ? 1 : 0.7}
+                  strokeOpacity={
+                    dragData.has(d.id) || getHoverState(d) ? 1 : 0.7
+                  }
                   fill={fill}
-                  fillOpacity={getHoverState(d) ? 0.4 : 0.1}
+                  fillOpacity={
+                    dragData.has(d.id) ? 1 : getHoverState(d) ? 0.4 : 0.1
+                  }
                 />
               ))}
             </>
@@ -543,7 +577,7 @@ export function LineGraph({
           fill="white"
           series={series}
           setSeries={setSeries}
-          enableDrag
+          enableDrag={!referenceData.length}
         />
         <NodeGroup
           data={referenceData}
@@ -635,8 +669,11 @@ export default function GuessrPage() {
           />
         </div>
         <div
-          className="flex-1 m-4 w-full sm:w-1/2"
-          style={{ height: 'calc(min(50vh, 400px))' }}
+          className="flex-1 m-4"
+          style={{
+            height: 'calc(min(50vh, 400px))',
+            minWidth: 'calc(min(92%, 400px))',
+          }}
         >
           <LineGraphContainer
             keys={ordinalKeys}

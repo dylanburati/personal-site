@@ -16,12 +16,9 @@ export const UserContext = React.createContext({
   token: null,
   authHttp: null,
   user: null,
-  login: async () => {
-    throw new Error('Not provided');
-  },
-  logout: () => {
-    throw new Error('Not provided');
-  },
+  createUser: () => {},
+  login: () => {},
+  logout: () => {},
 });
 
 export function UserProvider(props) {
@@ -63,6 +60,18 @@ export function UserProvider(props) {
     }
   }, [authHttp, detect401, token, user]);
 
+  const createUser = async (username, password) => {
+    const json = await http.post('/u', {
+      username,
+      password,
+    });
+    if (json.success) {
+      localStorage.setItem('auth_token', json.token);
+      setToken(json.token);
+      setUser({ id: json.userId, username: json.username });
+    }
+    return json;
+  };
   const login = async (username, password) => {
     const json = await http.post('/login', {
       username,
@@ -88,6 +97,7 @@ export function UserProvider(props) {
         token,
         authHttp,
         user,
+        createUser,
         login,
         logout,
       }}
