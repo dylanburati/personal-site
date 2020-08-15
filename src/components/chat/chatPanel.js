@@ -57,10 +57,13 @@ export function ChatPanel() {
   const { user } = useContext(UserContext);
   const { messages } = useContext(ChatContext);
 
-  const chats = messages.filter(m => m.target === 'chat' && m.content);
-  chats.forEach((m, i, arr) => {
-    m.isConsecutive = i > 0 && arr[i - 1].sender.userId === m.sender.userId;
-  });
+  const chats = messages
+    .filter(m => m.target === 'chat' && m.content)
+    .map((m, i, arr) => {
+      const isConsecutive =
+        i > 0 && arr[i - 1].sender.userId === m.sender.userId;
+      return { ...m, isConsecutive };
+    });
 
   const panelDiv = useRef(document.createElement('div'));
   useEffect(() => {

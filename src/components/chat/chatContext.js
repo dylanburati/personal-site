@@ -11,7 +11,7 @@ export const ChatContext = React.createContext({
   nickname: null,
   isLoading: false,
   isConnected: false,
-  sendChat: () => {},
+  sendMessage: () => {},
   messages: [],
 });
 const wsUrl = 'ws://localhost:7000/ws';
@@ -52,12 +52,8 @@ export function ChatProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, token]);
 
-  const sendChat = content => {
-    if (wsClient)
-      wsClient.send({
-        action: 'chat',
-        data: content,
-      });
+  const sendMessage = m => {
+    if (wsClient) wsClient.send(m);
   };
 
   const [messages, setMessages] = useState([]);
@@ -139,7 +135,7 @@ export function ChatProvider({ children }) {
         nickname,
         isLoading: connect.loading,
         isConnected: wsClient != null,
-        sendChat,
+        sendMessage,
         messages,
       }}
     >

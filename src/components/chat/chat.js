@@ -4,10 +4,11 @@ import { ChatCompose } from './chatCompose';
 import { ChatPanel } from './chatPanel';
 import { navigate } from 'gatsby';
 import { ChatContext } from './chatContext';
+import GuessMachine from './guessMachine';
 import '../../css/chat.css';
 
 function Chat() {
-  const { roomTitle, sendChat } = useContext(ChatContext);
+  const { roomTitle, sendMessage } = useContext(ChatContext);
 
   const handleSend = async (text, attachments) => {
     let data = { text };
@@ -27,7 +28,7 @@ function Chat() {
     //     tag: att.type.startsWith('image') ? 'img' : 'video',
     //   }));
     // }
-    sendChat(data);
+    sendMessage({ action: 'chat', data });
     return true;
   };
 
@@ -48,8 +49,11 @@ function Chat() {
         <span className="flex-grow"></span>
         {/* info */}
       </div>
-      <ChatPanel />
-      <ChatCompose send={handleSend} />
+      <GuessMachine />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <ChatPanel />
+        <ChatCompose send={handleSend} />
+      </div>
     </div>
   );
 }

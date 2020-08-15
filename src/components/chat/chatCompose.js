@@ -61,7 +61,7 @@ export function ChatCompose({ send }) {
               }
             }}
           />
-          <div className="absolute h-full right-0 top-0">
+          <div className="absolute h-full right-0 top-0 overflow-hidden">
             <div className="text-pen-light hover:text-pen-lighter relative pt-2 pr-2">
               <Image size={16} className="stroke-current" />
               <input

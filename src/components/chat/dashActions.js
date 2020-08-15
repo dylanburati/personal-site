@@ -68,28 +68,29 @@ function CreateForm({ handleLogin }) {
 function JoinForm({ handleLogin }) {
   const [reqCode, setReqCode] = useState('');
 
-  const handleJoin = () => {
+  const handleJoin = ev => {
+    ev.preventDefault();
     navigate(`/quip?room=${reqCode}`);
   };
 
   return (
-    <div className="flex flex-wrap mt-3">
+    <form onSubmit={handleJoin} className="flex flex-wrap -m-1 mt-2">
       <input
         name="code"
         placeholder="Enter a code"
         type="text"
         autoComplete="off"
-        className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 mb-2 sm:mb-0 mr-2"
+        className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 m-1"
         value={reqCode}
         onChange={ev => setReqCode(ev.currentTarget.value)}
       />
       <button
-        className="w-full sm:w-auto bg-accent-200 hover:bg-accent text-white py-1 px-3 rounded"
-        onClick={handleJoin}
+        type="submit"
+        className="w-full sm:w-auto bg-accent-200 hover:bg-accent text-white py-1 px-3 rounded m-1"
       >
         Go!
       </button>
-    </div>
+    </form>
   );
 }
 
