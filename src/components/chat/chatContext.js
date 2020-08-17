@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useContext, useReducer } from 'react';
-import { UserContext } from './userContext';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { globalHistory } from '@reach/router';
-import WSClient from '../../services/wsClient';
-import { useAsyncTask } from '../../hooks/useAsyncTask';
 import qs from 'querystring';
+import WSClient from '../../services/wsClient';
+import { UserContext } from './userContext';
+import { useAsyncTask } from '../../hooks/useAsyncTask';
+import { navigate } from 'gatsby';
 
 export const ChatContext = React.createContext({
   roomId: null,
   roomTitle: null,
+  roomUsers: null,
   nickname: null,
   isLoading: false,
   isConnected: false,
   sendMessage: () => {},
   messages: [],
 });
+
 const wsUrl = 'ws://localhost:7000/ws';
 export function ChatProvider({ children }) {
   const { location } = globalHistory;
@@ -24,6 +27,7 @@ export function ChatProvider({ children }) {
   });
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
+  const [roomUsers, setRoomUsers] = useState({});
 
   useEffect(() => {
     if (roomId && !token) {
@@ -32,25 +36,32 @@ export function ChatProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, token]);
 
-  const [, onConnect] = useReducer(n => n + 1, 0);
   const [wsClient, setWsClient] = useState();
-  const connect = useAsyncTask(async () => {
-    const nextClient = new WSClient(`${wsUrl}/${roomId}`, onConnect, onConnect);
-    const msg = await nextClient.sendAndListen({
-      action: 'login',
-      data: { token },
-    });
-    setWsClient(nextClient);
-    setRoomTitle(msg.title);
-    setNickname(msg.nickname);
-    if (msg.isFirstLogin) console.log('prompt');
-  });
+  const connect = useAsyncTask(
+    useCallback(
+      async client => {
+        const msg = await client.sendAndListen({
+          action: 'login',
+          data: { token },
+        });
+        setWsClient(client);
+        setRoomTitle(msg.title);
+        setNickname(msg.nickname);
+        if (msg.isFirstLogin) console.log('prompt');
+      },
+      [token]
+    )
+  );
   useEffect(() => {
     if (roomId && token && !wsClient && !connect.loading) {
-      connect.run();
+      const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
+      nextClient.connect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, token]);
+  useEffect(() => {
+    if (wsClient) wsClient.setConnector(connect.run);
+  }, [connect.run, wsClient]);
 
   const sendMessage = m => {
     if (wsClient) wsClient.send(m);
@@ -69,12 +80,15 @@ export function ChatProvider({ children }) {
       }
       if (toAdd.length) {
         setMessages(messages => {
-          const ids = new Set(messages.map(m => m.id));
+          const ids = new Map(messages.map((m, i) => [m.id, i]));
           const next = [...messages];
           toAdd.forEach(m => {
-            if (!ids.has(m.id)) {
+            const replaceIdx = ids.get(m.id);
+            if (replaceIdx === undefined) {
               next.push(m);
-              ids.add(m.id);
+              ids.set(m.id, undefined);
+            } else {
+              next[replaceIdx] = m;
             }
           });
           setMessages(next);
@@ -99,11 +113,10 @@ export function ChatProvider({ children }) {
 
     const lk = wsClient.addListener(message => {
       if (message.type === 'error') {
-        if (
-          typeof message.message === 'string' &&
-          message.message.startsWith('Unauthenticated')
-        ) {
-          connect.run();
+        if (typeof message.message === 'string') {
+          if (message.message.startsWith('Unauthenticated')) wsClient.connect();
+          else if (message.message.startsWith('Invalid conversation id'))
+            navigate('/quip');
         }
       }
     });
@@ -111,14 +124,27 @@ export function ChatProvider({ children }) {
     return () => {
       if (wsClient) wsClient.removeListener(lk);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsClient]);
   useEffect(() => {
     if (!wsClient) return;
 
     const lk = wsClient.addListener(message => {
-      if (message.type === 'status') {
-        console.log(message.data);
+      if (message.type === 'setNickname') {
+        const { userId, nickname } = message.data;
+        setRoomUsers(state => ({
+          ...state,
+          [userId]: {
+            ...state[userId],
+            nickname,
+          },
+        }));
+        setMessages(messages =>
+          messages.map(m => {
+            const mc = { ...m };
+            if (mc.sender.userId === userId) mc.sender.nickname = nickname;
+            return mc;
+          })
+        );
       }
     });
 
@@ -132,6 +158,7 @@ export function ChatProvider({ children }) {
       value={{
         roomId,
         roomTitle,
+        roomUsers,
         nickname,
         isLoading: connect.loading,
         isConnected: wsClient != null,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useReducer, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { curveLinear } from '@vx/curve';
 import { ParentSize } from '@vx/responsive';
@@ -10,29 +10,12 @@ import { scaleLinear, scaleBand } from '@vx/scale';
 import { LinearGradient } from '@vx/gradient';
 import { Drag } from '@vx/drag';
 import { Tooltip, defaultStyles, useTooltip } from '@vx/tooltip';
-import { clamp, partition, takeWhile, zip } from 'lodash';
+import { clamp, partition, takeWhile } from 'lodash';
 import { NodeGroup } from 'react-move';
+import { useStateNoCmp } from '../../hooks/useStateNoCmp';
 
 export const gradientColor1 = '#ec4b5f';
 export const gradientColor2 = '#b2305b';
-
-/**
- * @template T
- * @param {T | (() => T)} init
- * @returns {[T, React.SetStateAction<T>]}
- */
-export const useStateNoCmp = init => {
-  const [state, setState] = useState(init);
-  const [, rerender] = useReducer(n => n + 1, 0);
-
-  return [
-    state,
-    value => {
-      setState(value);
-      rerender();
-    },
-  ];
-};
 
 const useHoverStates = ({ keyAccessor }) => {
   const [hoveringItems, setHoveringItems] = useStateNoCmp(new Set());
@@ -67,13 +50,13 @@ export const GridAndAxes = ({ top, left, width, height, xScale, yScale }) => (
       tickStroke="rgba(255,255,255,0.5)"
       tickLabelProps={val => {
         const wordLengths = val.split(/\s/).map(e => e.length);
-        const twoWordLengths = zip(
-          wordLengths.slice(0, -1),
-          wordLengths.slice(1)
-        ).map(e => e.reduce((a, b) => a + b));
-        const horizFactor = (clamp(Math.max(...wordLengths), 8, 16) - 8) / 40;
-        const vertFactor =
-          (clamp(1 + twoWordLengths.filter(n => n > 6).length, 3, 7) - 3) / 8;
+        const lineLengths = wordLengths.reduce((acc, n) => {
+          if (acc.length && acc[0] < 3) acc[0] += n;
+          else acc.unshift(n);
+          return acc;
+        }, []);
+        const horizFactor = (clamp(Math.max(...lineLengths), 8, 16) - 8) / 40;
+        const vertFactor = (clamp(lineLengths.length, 3, 7) - 3) / 8;
         return {
           fill: '#ffffff',
           // scaleToFit: true,
@@ -345,7 +328,7 @@ export const LineSeries = ({
                       tooltipTimeout.current = null;
                     }
                     showTooltip({
-                      tooltipLeft: xScale(getX(d)) + xOffset,
+                      tooltipLeft: xScale(getX(d)) + xOffset - 30,
                       tooltipTop: yScale(getY(d)) + yOffset + 24,
                       tooltipData: {
                         name,
@@ -445,8 +428,8 @@ export function LineGraph({
           width={width}
           height={height}
           fill="url(#sunbather)"
-          rx={14}
-          ry={14}
+          rx="0.75rem"
+          ry="0.75rem"
         />
         <GridAndAxes
           top={marginTop}
@@ -521,6 +504,7 @@ export function LineGraph({
             width: 'max-content',
             lineHeight: 1.5,
             userSelect: 'none',
+            zIndex: 9999,
           }}
         >
           <div>
@@ -532,7 +516,7 @@ export function LineGraph({
               {tooltipData.name}:
             </strong>{' '}
             {tooltipData.point.y.toFixed(
-              3 - Math.round(Math.log10(rangeMax - rangeMin))
+              3 - clamp(Math.round(Math.log10(rangeMax - rangeMin)), -1, 3)
             )}
             {tooltipData.point.moreInfo && (
               <>

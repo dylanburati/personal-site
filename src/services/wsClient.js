@@ -1,27 +1,29 @@
 export default class WSClient {
-  constructor(url, readyCallback, reconnectCallback) {
+  constructor(url, connector) {
     this.url = url;
-    this.ws = new WebSocket(url);
+    this.ws = null;
     this.nextKey = 1;
     this.listeners = new Map();
     this.sendQueue = [];
-    this.reconnectCallback = reconnectCallback || readyCallback;
-    this.isConnecting = true;
-
-    this.ws.onopen = async () => {
-      this.handleOpen();
-      await readyCallback(this);
-      this.isConnecting = false;
-      this.send();
-    };
+    this.connector = connector;
+    this.isConnecting = false;
   }
 
-  reconnect() {
+  setConnector(connector) {
+    this.connector = connector;
+  }
+
+  connect() {
     this.isConnecting = true;
     this.ws = new WebSocket(this.url);
+    this.ws.onmessage = ev => {
+      const message = JSON.parse(ev.data);
+      this.listeners.forEach(listener => {
+        listener(message);
+      });
+    };
     this.ws.onopen = async () => {
-      this.handleOpen();
-      await this.reconnectCallback(this);
+      await this.connector(this);
       this.isConnecting = false;
       this.send();
     };
@@ -29,17 +31,10 @@ export default class WSClient {
 
   disconnect() {
     this.isConnecting = false;
-    this.ws.close();
-    this.ws.onopen = this.ws.onmessage = null;
-  }
-
-  handleOpen() {
-    this.ws.onmessage = ev => {
-      const message = JSON.parse(ev.data);
-      this.listeners.forEach(listener => {
-        listener(message);
-      });
-    };
+    if (this.ws) {
+      this.ws.close();
+      this.ws.onopen = this.ws.onmessage = null;
+    }
   }
 
   addListener(listener) {
@@ -57,20 +52,24 @@ export default class WSClient {
     const messages = [...this.sendQueue];
     if (message) messages.push(message);
 
-    if (!this.isConnecting && this.ws.readyState === WebSocket.OPEN) {
+    if (
+      !this.isConnecting &&
+      this.ws &&
+      this.ws.readyState === WebSocket.OPEN
+    ) {
       messages.forEach(m => this.ws.send(JSON.stringify(m)));
       this.sendQueue = [];
     } else {
       this.sendQueue.push(message);
       if (!this.isConnecting) {
-        this.reconnect();
+        this.connect();
       }
     }
   }
 
-  // sendSync(message) {
-  //   this.ws.send(JSON.stringify(message));
-  // }
+  sendSync(message) {
+    this.ws.send(JSON.stringify(message));
+  }
 
   /**
    * @param {any} message Object with action and data for WS server
@@ -85,7 +84,7 @@ export default class WSClient {
           return resolve(response);
         }
       });
-      this.send(message);
+      this.sendSync(message);
       setTimeout(() => reject('Timeout waiting for websocket response'), 30000);
     });
   }

@@ -45,6 +45,9 @@ module.exports = {
         '1/2': '50%',
         '3/4': '75%',
       },
+      borderRadius: {
+        xl: '0.75rem',
+      },
     },
   },
 };

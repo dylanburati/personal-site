@@ -1,7 +1,8 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
-import { FastForward } from 'react-feather';
+import { Check, FastForward } from 'react-feather';
 import { findLast, findLastIndex } from 'lodash';
 import { ChatContext } from './chatContext';
+import { UserContext } from './userContext';
 import LineGraphContainer, {
   gradientColor1,
   gradientColor2,
@@ -10,7 +11,8 @@ import LineGraphContainer, {
 export const lineColors = ['#5fe984', '#67f8f0', '#3097f5', '#7b82fa'];
 
 const GuessMachine = () => {
-  const { isConnected, nickname, messages, sendMessage } = useContext(
+  const { user } = useContext(UserContext);
+  const { isConnected, messages, roomUsers, sendMessage } = useContext(
     ChatContext
   );
 
@@ -19,6 +21,7 @@ const GuessMachine = () => {
   const [question, setQuestion] = useState(null);
   const [series, setSeries] = useState([]);
   const [answers, setAnswers] = useState([]);
+  const [progress, setProgress] = useState(null);
 
   const keys = question ? question.data.map(e => e.key) : [];
   const allPointsDone = series.length && series.length === keys.length;
@@ -26,19 +29,20 @@ const GuessMachine = () => {
   const referenceData = useMemo(() => {
     return answers.map((a, i) => {
       const colorIdx = (answers.length - i - 1) % lineColors.length;
+      const isSelf = a.userId === user.id;
+      const responder = roomUsers[a.userId];
+      const nick = responder ? responder.nickname : a.name;
       return {
-        name: a.name === nickname ? 'You' : a.name,
+        name: isSelf ? 'You' : nick,
         showTooltip: true,
-        stroke: a.name === nickname ? 'white' : lineColors[colorIdx],
-        fill: a.name === nickname ? 'white' : lineColors[colorIdx],
+        stroke: isSelf ? 'white' : lineColors[colorIdx],
+        fill: isSelf ? 'white' : lineColors[colorIdx],
         series: a.series,
       };
     });
-  }, [answers, nickname]);
+  }, [answers, roomUsers, user]);
 
-  const gameMessages = messages.filter(
-    m => m.target.startsWith('guessr') && m.content
-  );
+  const gameMessages = messages.filter(m => m.target.startsWith('guessr'));
   useEffect(() => {
     const startIdx = findLastIndex(
       gameMessages,
@@ -48,12 +52,19 @@ const GuessMachine = () => {
       const start = gameMessages[startIdx];
       const reveal = findLast(
         gameMessages.slice(startIdx),
-        m => m.target === 'guessr:reveal'
+        m => m.target === 'guessr:reveal' || m.target === 'guessr:cancel'
       );
       if (reveal) {
-        if (Date.now() - reveal.time < 10 * 60 * 1000) {
+        if (reveal.target === 'guessr:cancel') {
+          setStep(0);
+          setQuestion(null);
+          setProgress(null);
+          setSeries([]);
+          setAnswers([]);
+        } else if (Date.now() - reveal.time < 10 * 60 * 1000) {
           setStep(3);
           setQuestion(start.content);
+          setProgress(null);
           setSeries([]);
           const answers = reveal.content.result.map(a => ({
             ...a,
@@ -62,9 +73,19 @@ const GuessMachine = () => {
           setAnswers(answers);
         }
       } else {
-        if (Date.now() - start.time < 10 * 60 * 1000) {
+        const progress = findLast(
+          gameMessages.slice(startIdx),
+          m => m.target === 'guessr:progress'
+        );
+        if (progress) {
+          setProgress(progress.content);
+        } else {
+          setProgress(null);
+        }
+        const nextQuestion = { id: start.id, ...start.content };
+        if (!question || question.id !== nextQuestion.id) {
           setStep(1);
-          setQuestion(start.content);
+          setQuestion(nextQuestion);
           setSeries([]);
           setAnswers([]);
         }
@@ -88,6 +109,10 @@ const GuessMachine = () => {
 
   if (!isConnected) return null;
 
+  const Icon =
+    progress && progress.submittedUserIds.includes(user.id)
+      ? Check
+      : FastForward;
   return (
     <div>
       <div
@@ -99,7 +124,7 @@ const GuessMachine = () => {
       >
         {step < 2 && (
           <div
-            className="rounded-lg h-full p-2 text-white"
+            className="rounded-xl h-full p-2 text-white"
             style={{
               background: `linear-gradient(45deg, ${gradientColor1}, ${gradientColor2})`,
             }}
@@ -127,12 +152,16 @@ const GuessMachine = () => {
             referenceData={referenceData}
           />
         )}
-        <div className="absolute right-0" style={{ top: 'calc(100% - 32px)' }}>
+        <div className="absolute bottom-0 right-0 overflow-hidden flex items-center rounded-tl rounded-br-xl opacity-50 hover:opacity-100 bg-gray-900 text-white">
+          {progress && (
+            <span className="cursor-default text-sm px-2">{`${progress.progress} / ${progress.total}`}</span>
+          )}
           <button
-            className="bg-gray-900 hover:bg-accent text-white p-1 m-1 rounded"
+            className="hover:bg-accent"
+            style={{ padding: '0.25rem 12px 0.25rem 8px' }}
             onClick={handleForward}
           >
-            <FastForward size={16} />
+            <Icon size={16} />
           </button>
         </div>
       </div>

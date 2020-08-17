@@ -11,7 +11,12 @@ function Chat() {
   const { roomTitle, sendMessage } = useContext(ChatContext);
 
   const handleSend = async (text, attachments) => {
-    let data = { text };
+    const setNicknameArgs = /^\s*\/nick\s+(.*)$/.exec(text);
+    if (setNicknameArgs) {
+      sendMessage({ action: 'setNickname', data: setNicknameArgs[1] });
+      return;
+    }
+    const data = { text };
     // if (attachments && attachments.length) {
     //   const formdata = new FormData();
     //   attachments.forEach(a => {
