@@ -47,7 +47,7 @@ export function ChatProvider({ children }) {
       });
       setMessages(next);
     });
-  });
+  }, []);
 
   useEffect(() => {
     if (roomId && !token) {

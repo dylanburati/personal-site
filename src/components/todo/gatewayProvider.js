@@ -8,13 +8,14 @@ import React, {
 } from 'react';
 import HttpClient from '../../services/httpClient';
 
-const baseUrl = 'http://localhost:7000';
+const baseUrl = 'https://relisten.xyz:8082';
 const collectionName = 'todo';
 const http = new HttpClient(baseUrl);
+const tokenStoreKey = 'todo/auth_token';
 
 function useGateway() {
   const [token, setToken] = useState(
-    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    typeof window !== 'undefined' ? localStorage.getItem(tokenStoreKey) : null
   );
   const [user, setUser] = useState(token ? { username: null } : null);
   const clearUser = useCallback(() => {
@@ -57,7 +58,7 @@ function useGateway() {
       })
       .then(json => {
         if (json.success) {
-          localStorage.setItem('auth_token', json.token);
+          localStorage.setItem(tokenStoreKey, json.token);
           setToken(json.token);
           setUser({ username: json.username });
         }
@@ -66,7 +67,7 @@ function useGateway() {
   };
   const logout = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(tokenStoreKey);
     }
     clearUser();
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import HttpClient from '../../services/httpClient';
 
 const baseUrl = 'https://datagame.live';
+const tokenStoreKey = 'chat/auth_token';
 
 const localStorageOrDefault = (key, dfault) => {
   if (typeof window === 'undefined') return dfault;
@@ -24,7 +25,7 @@ export const UserContext = React.createContext({
 
 export function UserProvider(props) {
   const [token, setToken] = useState(() =>
-    localStorageOrDefault('auth_token', null)
+    localStorageOrDefault(tokenStoreKey, null)
   );
   const [user, setUser] = useState(null);
   const clearUser = useCallback(() => {
@@ -64,7 +65,7 @@ export function UserProvider(props) {
   const createUser = async input => {
     const json = await http.post('/u', input);
     if (json.success) {
-      localStorage.setItem('auth_token', json.token);
+      localStorage.setItem(tokenStoreKey, json.token);
       setToken(json.token);
       setUser({ id: json.userId, username: json.username });
     }
@@ -78,7 +79,7 @@ export function UserProvider(props) {
       password,
     });
     if (json.success) {
-      localStorage.setItem('auth_token', json.token);
+      localStorage.setItem(tokenStoreKey, json.token);
       setToken(json.token);
       setUser({ id: json.userId, username: json.username });
     }
@@ -86,7 +87,7 @@ export function UserProvider(props) {
   };
   const logout = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(tokenStoreKey);
     }
     clearUser();
   };
