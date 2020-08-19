@@ -65,7 +65,7 @@ export function ChatPanel() {
   }, [chats.length]);
 
   return (
-    <div className="flex-1 my-2 px-4 overflow-auto scrollbar-dark">
+    <div className="flex-1 my-2 px-4 overflow-auto">
       <div className="flex min-h-full flex-col justify-end" ref={panelDiv}>
         {chats.map(m => (
           <ChatMessage

@@ -30,6 +30,24 @@ export function ChatProvider({ children }) {
   const [nickname, setNickname] = useState('');
   const [roomUsers, setRoomUsers] = useState({});
   const [isFirstLogin, setFirstLogin] = useState(false);
+  const [messages, setMessages] = useState([]);
+
+  const mergeMessages = useCallback(toAdd => {
+    setMessages(messages => {
+      const ids = new Map(messages.map((m, i) => [m.id, i]));
+      const next = [...messages];
+      toAdd.forEach(m => {
+        const replaceIdx = ids.get(m.id);
+        if (replaceIdx === undefined) {
+          next.push(m);
+          ids.set(m.id, undefined);
+        } else {
+          next[replaceIdx] = m;
+        }
+      });
+      setMessages(next);
+    });
+  });
 
   useEffect(() => {
     if (roomId && !token) {
@@ -50,6 +68,10 @@ export function ChatProvider({ children }) {
         setRoomTitle(msg.title);
         setNickname(msg.nickname);
         setFirstLogin(msg.isFirstLogin);
+        client.send({
+          action: 'getMessages',
+          data: {},
+        });
       },
       [token]
     )
@@ -57,7 +79,19 @@ export function ChatProvider({ children }) {
   useEffect(() => {
     if (roomId && token && !wsClient && !connect.loading) {
       const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
+      const lk = nextClient.addListener(message => {
+        if (message.type === 'message') {
+          mergeMessages([message.data]);
+        } else if (message.type === 'getMessages') {
+          mergeMessages(message.data);
+        }
+      });
       nextClient.connect();
+
+      return () => {
+        nextClient.disconnect();
+        nextClient.removeListener(lk);
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, token]);
@@ -69,47 +103,6 @@ export function ChatProvider({ children }) {
     if (wsClient) wsClient.send(m);
   };
 
-  const [messages, setMessages] = useState([]);
-  useEffect(() => {
-    if (!wsClient) return;
-
-    const lk = wsClient.addListener(message => {
-      const toAdd = [];
-      if (message.type === 'message') {
-        toAdd.push(message.data);
-      } else if (message.type === 'getMessages') {
-        toAdd.push(...message.data);
-      }
-      if (toAdd.length) {
-        setMessages(messages => {
-          const ids = new Map(messages.map((m, i) => [m.id, i]));
-          const next = [...messages];
-          toAdd.forEach(m => {
-            const replaceIdx = ids.get(m.id);
-            if (replaceIdx === undefined) {
-              next.push(m);
-              ids.set(m.id, undefined);
-            } else {
-              next[replaceIdx] = m;
-            }
-          });
-          setMessages(next);
-        });
-      }
-    });
-    wsClient.send({
-      action: 'getMessages',
-      data: {},
-    });
-
-    return () => {
-      if (wsClient) {
-        wsClient.disconnect();
-        wsClient.removeListener(lk);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsClient]);
   useEffect(() => {
     if (!wsClient) return;
 

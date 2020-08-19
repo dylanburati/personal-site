@@ -1,16 +1,3 @@
-.scrollbar-dark {
-  scrollbar-color: var(--color-paper) var(--color-paper-dark)
-}
-
-.scrollbar-dark::-webkit-scrollbar-track {
-  background: var(--color-paper)
-}
-
-.scrollbar-dark::-webkit-scrollbar-thumb {
-  background: var(--color-paper-dark)
-}
-
-
 .chat-message {
   @apply max-w-3/4;
 }

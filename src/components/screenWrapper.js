@@ -62,7 +62,9 @@ function ScreenWrapper({
   return (
     <div className={`flex flex-col absolute inset-0 ${className}`} ref={ref}>
       <span id="viewport-log"></span>
-      <div className={`flex-1 h-full ${innerClassName}`}>{children}</div>
+      <div className={`flex-1 h-full max-h-full ${innerClassName}`}>
+        {children}
+      </div>
     </div>
   );
 }
