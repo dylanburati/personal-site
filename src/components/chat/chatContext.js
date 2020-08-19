@@ -13,14 +13,15 @@ export const ChatContext = React.createContext({
   nickname: null,
   isLoading: false,
   isConnected: false,
+  isFirstLogin: false,
   sendMessage: () => {},
   messages: [],
 });
 
-const wsUrl = 'ws://localhost:7000/ws';
+const wsUrl = 'wss://datagame.live/ws';
 export function ChatProvider({ children }) {
   const { location } = globalHistory;
-  const { createGuest, token } = useContext(UserContext);
+  const { createGuest, token, user } = useContext(UserContext);
   const [roomId] = useState(() => {
     const { room } = qs.parse(location.search.replace(/^\?/, ''));
     return room;
@@ -28,6 +29,7 @@ export function ChatProvider({ children }) {
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
   const [roomUsers, setRoomUsers] = useState({});
+  const [isFirstLogin, setFirstLogin] = useState(false);
 
   useEffect(() => {
     if (roomId && !token) {
@@ -47,7 +49,7 @@ export function ChatProvider({ children }) {
         setWsClient(client);
         setRoomTitle(msg.title);
         setNickname(msg.nickname);
-        if (msg.isFirstLogin) console.log('prompt');
+        setFirstLogin(msg.isFirstLogin);
       },
       [token]
     )
@@ -131,6 +133,9 @@ export function ChatProvider({ children }) {
     const lk = wsClient.addListener(message => {
       if (message.type === 'setNickname') {
         const { userId, nickname } = message.data;
+        if (userId === user.id) {
+          setNickname(nickname);
+        }
         setRoomUsers(state => ({
           ...state,
           [userId]: {
@@ -162,6 +167,7 @@ export function ChatProvider({ children }) {
         nickname,
         isLoading: connect.loading,
         isConnected: wsClient != null,
+        isFirstLogin,
         sendMessage,
         messages,
       }}

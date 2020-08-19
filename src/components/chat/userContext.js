@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import HttpClient from '../../services/httpClient';
 
-const baseUrl = 'http://localhost:7000';
+const baseUrl = 'https://datagame.live';
 
 const localStorageOrDefault = (key, dfault) => {
   if (typeof window === 'undefined') return dfault;

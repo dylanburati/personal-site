@@ -11,7 +11,7 @@ import LineGraphContainer, {
 export const lineColors = ['#5fe984', '#67f8f0', '#3097f5', '#7b82fa'];
 
 const GuessMachine = () => {
-  const { user } = useContext(UserContext);
+  const { user = {} } = useContext(UserContext);
   const { isConnected, messages, roomUsers, sendMessage } = useContext(
     ChatContext
   );

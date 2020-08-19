@@ -4,14 +4,6 @@ import { UserContext } from './userContext';
 import { useStateNoCmp } from '../../hooks/useStateNoCmp';
 
 function ChatMessage({ from, content, isSelf, isConsecutive }) {
-  const getClassName = type => {
-    const base = 'mb-2 rounded';
-    if (type === 'text') {
-      return `${base} whitespace-pre-wrap`;
-    } else if (type === 'imgur') {
-      return base;
-    }
-  };
   return (
     <div
       className={
@@ -55,7 +47,7 @@ function ChatMessage({ from, content, isSelf, isConsecutive }) {
 }
 
 export function ChatPanel() {
-  const { user } = useContext(UserContext);
+  const { user = {} } = useContext(UserContext);
   const { messages } = useContext(ChatContext);
 
   const chats = messages

@@ -51,11 +51,11 @@ export const GridAndAxes = ({ top, left, width, height, xScale, yScale }) => (
       tickLabelProps={val => {
         const wordLengths = val.split(/\s/).map(e => e.length);
         const lineLengths = wordLengths.reduce((acc, n) => {
-          if (acc.length && acc[0] < 3) acc[0] += n;
+          if (acc.length && acc[0] + n < 7) acc[0] += n;
           else acc.unshift(n);
           return acc;
         }, []);
-        const horizFactor = (clamp(Math.max(...lineLengths), 8, 16) - 8) / 40;
+        const horizFactor = (clamp(Math.max(...lineLengths), 8, 16) - 8) / 32;
         const vertFactor = (clamp(lineLengths.length, 3, 7) - 3) / 8;
         return {
           fill: '#ffffff',
