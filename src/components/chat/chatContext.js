@@ -105,7 +105,7 @@ export function ChatProvider({ children }) {
         if (typeof message.message === 'string') {
           if (message.message.startsWith('Unauthenticated')) wsClient.connect();
           else if (message.message.startsWith('Invalid conversation id'))
-            navigate('/quip');
+            navigate('/chat');
         }
       }
     });

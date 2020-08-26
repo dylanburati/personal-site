@@ -12,7 +12,7 @@ import { UserProvider } from '../components/chat/userContext';
 import '../css/styles.css';
 import { ChatProvider } from '../components/chat/chatContext';
 
-function QuipApp() {
+function ChatApp() {
   const { location } = globalHistory;
   const [roomId, setRoomId] = useState();
 
@@ -38,16 +38,16 @@ function QuipApp() {
   );
 }
 
-const QuipPage = ({ location }) => {
+const ChatPage = ({ location }) => {
   return (
     <Layout navLinks={[{ text: 'Blog', href: '/blog' }]} hideFooter>
-      <SEO title="Quip" />
+      <SEO title="Chat" />
 
       <UserProvider>
-        <QuipApp />
+        <ChatApp />
       </UserProvider>
     </Layout>
   );
 };
 
-export default QuipPage;
+export default ChatPage;

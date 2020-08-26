@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Modal } from '../modal';
 import { UserContext } from './userContext';
 import { Tabs } from '../tabs';
+import { useAsyncTask } from '../../hooks/useAsyncTask';
 
 export function RegisterForm({ closeModal }) {
   const { createGuest, register } = useContext(UserContext);
@@ -11,6 +12,17 @@ export function RegisterForm({ closeModal }) {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState();
 
+  const submit = useAsyncTask(async () => {
+    let json;
+    if (isGuest) {
+      json = await createGuest();
+    } else {
+      json = await register(inputUsername, password);
+    }
+
+    if (json.success) closeModal();
+    else setErrorMessage(json.message || 'Unknown error');
+  });
   const handleSubmit = ev => {
     ev.preventDefault();
     if (!isGuest) {
@@ -26,21 +38,9 @@ export function RegisterForm({ closeModal }) {
         setErrorMessage('Password must be at least 8 characters long');
         return;
       }
-      register(inputUsername, password);
     }
 
-    const run = async () => {
-      let json;
-      if (isGuest) {
-        json = await createGuest();
-      } else {
-        json = await register(inputUsername, password);
-      }
-
-      if (json.success) closeModal();
-      else setErrorMessage(json.message || 'Unknown error');
-    };
-    run();
+    if (!submit.loading) submit.run();
   };
 
   return (
@@ -113,14 +113,14 @@ export function LoginForm({ closeModal }) {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState();
 
+  const submit = useAsyncTask(async () => {
+    const json = await login(inputUsername, password);
+    if (json.success) closeModal();
+    else setErrorMessage(json.message || 'Unknown error');
+  });
   const handleSubmit = ev => {
     ev.preventDefault();
-    const run = async () => {
-      const json = await login(inputUsername, password);
-      if (json.success) closeModal();
-      else setErrorMessage(json.message || 'Unknown error');
-    };
-    run();
+    if (!submit.loading) submit.run();
   };
 
   return (

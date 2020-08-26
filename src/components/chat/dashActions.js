@@ -16,7 +16,7 @@ function CreateForm() {
 
     const json = await authHttp.post('/g', { title, nickname });
     if (json.success) {
-      navigate(`/quip?room=${json.conversationId}`);
+      navigate(`/chat?room=${json.conversationId}`);
     } else {
       setErrorMessage(json.message || 'Unknown error');
     }
@@ -32,7 +32,7 @@ function CreateForm() {
       <form onSubmit={handleCreate} className="flex flex-wrap -m-1 mt-2">
         <input
           name="title"
-          placeholder="Enter a title for the room"
+          placeholder="Room title"
           type="text"
           autoComplete="off"
           className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 m-1"
@@ -44,7 +44,7 @@ function CreateForm() {
         />
         <input
           name="nickname"
-          placeholder="Enter a username for yourself"
+          placeholder="Your nickname in the room"
           type="text"
           autoComplete="off"
           className="w-full sm:w-auto flex-1 bg-paper-darker hover:bg-paper-dark rounded p-2 m-1"
@@ -71,7 +71,7 @@ function JoinForm() {
 
   const handleJoin = ev => {
     ev.preventDefault();
-    navigate(`/quip?room=${reqCode}`);
+    navigate(`/chat?room=${reqCode}`);
   };
 
   return (

@@ -55,12 +55,12 @@ function Dashboard({ handleOpen }) {
             },
             {
               field: 'nickname',
-              label: 'Your username',
+              label: 'Your nickname',
               class: 'text-left',
             },
           ]}
           handleSelect={handleSelect}
-          handleOpen={item => navigate(`/quip?room=${item.id}`)}
+          handleOpen={item => navigate(`/chat?room=${item.id}`)}
           keyField="id"
         />
       ) : (

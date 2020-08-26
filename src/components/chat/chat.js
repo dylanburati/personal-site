@@ -63,7 +63,7 @@ function Chat() {
   };
 
   const handleBack = () => {
-    navigate(`/quip`);
+    navigate(`/chat`);
   };
 
   return (

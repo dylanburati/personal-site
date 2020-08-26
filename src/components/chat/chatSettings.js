@@ -3,7 +3,7 @@ import { Modal } from '../modal';
 import { ChatContext } from './chatContext';
 
 export function ChatSettings({ showModal, closeModal }) {
-  const { nickname, sendMessage } = useContext(ChatContext);
+  const { roomId, nickname, sendMessage } = useContext(ChatContext);
   const [inputNickname, setInputNickname] = useState(nickname);
   const [errorMessage, setErrorMessage] = useState();
   useEffect(() => {
@@ -27,6 +27,12 @@ export function ChatSettings({ showModal, closeModal }) {
   return (
     <Modal showModal={showModal} closeModal={closeModal}>
       <form onSubmit={handleSubmit}>
+        <label className="block text-sm text-pen-light" htmlFor="roomId">
+          Room code
+        </label>
+        <div className="mt-2 mb-4" name="roomId">
+          {roomId}
+        </div>
         <label className="block text-sm text-pen-light" htmlFor="nickname">
           Nickname
         </label>
