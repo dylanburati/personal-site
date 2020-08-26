@@ -3,7 +3,6 @@ import { navigate } from 'gatsby';
 import Table from '../table';
 import DashActions from './dashActions';
 import { UserContext } from './userContext';
-import { Modal } from '../modal';
 import { useAsyncTask } from '../../hooks/useAsyncTask';
 import { AccountModal } from './accountModal';
 

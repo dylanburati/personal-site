@@ -6,18 +6,41 @@ import { ChatSettings } from './chatSettings';
 import { navigate } from 'gatsby';
 import { ChatContext } from './chatContext';
 import { UserContext } from './userContext';
+import { AccountModal } from './accountModal';
 import GuessMachine from './guessMachine';
 import '../../css/chat.css';
 
 function Chat() {
-  const { authHttp } = useContext(UserContext);
-  const { isFirstLogin, roomTitle, sendMessage } = useContext(ChatContext);
-  const [showModal, setShowModal] = useState(false);
+  const { authHttp, user, userLoading } = useContext(UserContext);
+  const { isFirstLogin, setFirstLogin, roomTitle, sendMessage } = useContext(
+    ChatContext
+  );
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+
   useEffect(() => {
-    if (isFirstLogin) setShowModal(true);
-  }, [isFirstLogin]);
+    if (!user && !userLoading) {
+      setShowAccountModal(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userLoading]);
+
+  useEffect(() => {
+    if (isFirstLogin) {
+      setShowSettings(true);
+      setFirstLogin(false);
+    }
+  }, [isFirstLogin, setFirstLogin]);
 
   const handleSend = async (text, attachments) => {
+    if (text === '/guessr:refresh') {
+      if (authHttp) {
+        authHttp.get('/guessr/q/refresh').then(console.log);
+      } else {
+        console.log('guessr refresh failed - http client not initialized');
+      }
+      return;
+    }
     const data = { text };
     if (authHttp && attachments && attachments.length) {
       const formdata = new FormData();
@@ -56,7 +79,7 @@ function Chat() {
         <span className="flex-grow"></span>
         <button
           className="hover:bg-paper-darker p-1 rounded-full"
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowSettings(true)}
         >
           <Settings className="stroke-current" size={16} />
         </button>
@@ -67,8 +90,13 @@ function Chat() {
         <ChatCompose send={handleSend} />
       </div>
       <ChatSettings
-        showModal={showModal}
-        closeModal={() => setShowModal(false)}
+        showModal={showSettings}
+        closeModal={() => setShowSettings(false)}
+      />
+      <AccountModal
+        showModal={showAccountModal}
+        closeModal={() => setShowAccountModal(false)}
+        defaultTab={0}
       />
     </div>
   );

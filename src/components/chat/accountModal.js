@@ -27,10 +27,20 @@ export function RegisterForm({ closeModal }) {
         return;
       }
       register(inputUsername, password);
-    } else {
-      createGuest();
     }
-    closeModal();
+
+    const run = async () => {
+      let json;
+      if (isGuest) {
+        json = await createGuest();
+      } else {
+        json = await register(inputUsername, password);
+      }
+
+      if (json.success) closeModal();
+      else setErrorMessage(json.message || 'Unknown error');
+    };
+    run();
   };
 
   return (

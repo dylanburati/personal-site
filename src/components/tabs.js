@@ -15,10 +15,10 @@ export function Tabs({
           <li className="mx-1 flex-1" key={idx}>
             <button
               className={
-                'inline-block w-full text-center border-accent-200 py-1 px-3' +
+                'inline-block w-full text-center border-accent-200 py-1 px-3 rounded-t' +
                 (itemClassName
                   ? ` ${itemClassName}`
-                  : 'hover:bg-paper-darker') +
+                  : ' hover:bg-paper-darker') +
                 (activeTab === idx ? ' border-b' : '')
               }
               onClick={() => setActiveTab(idx)}

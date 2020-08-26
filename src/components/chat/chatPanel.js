@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useContext } from 'react';
 import { ChatContext } from './chatContext';
 import { UserContext } from './userContext';
-import { useStateNoCmp } from '../../hooks/useStateNoCmp';
 
 function ChatMessage({ from, content, isSelf, isConsecutive }) {
   return (

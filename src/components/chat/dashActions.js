@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useMemo } from 'react';
 import { navigate } from 'gatsby';
 import { Tabs } from '../tabs';
 import { UserContext } from './userContext';
@@ -96,13 +96,14 @@ function JoinForm() {
 }
 
 function DashActions() {
+  const { user } = useContext(UserContext);
   const [activeTab, setActiveTab] = useState(0);
+  const tabItems = useMemo(() => {
+    if (user) return ['Join', 'Create'];
+    return ['Join'];
+  }, [user]);
   return (
-    <Tabs
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      items={['Join', 'Create']}
-    >
+    <Tabs activeTab={activeTab} setActiveTab={setActiveTab} items={tabItems}>
       {activeTab === 0 && <JoinForm />}
       {activeTab === 1 && <CreateForm />}
     </Tabs>

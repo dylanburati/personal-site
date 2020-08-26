@@ -14,6 +14,7 @@ export const ChatContext = React.createContext({
   isLoading: false,
   isConnected: false,
   isFirstLogin: false,
+  setFirstLogin: () => {},
   sendMessage: () => {},
   messages: [],
 });
@@ -21,7 +22,7 @@ export const ChatContext = React.createContext({
 const wsUrl = 'wss://datagame.live/ws';
 export function ChatProvider({ children }) {
   const { location } = globalHistory;
-  const { createGuest, token, user } = useContext(UserContext);
+  const { token, user, userLoading } = useContext(UserContext);
   const [roomId] = useState(() => {
     const { room } = qs.parse(location.search.replace(/^\?/, ''));
     return room;
@@ -49,13 +50,6 @@ export function ChatProvider({ children }) {
     });
   }, []);
 
-  useEffect(() => {
-    if (roomId && !token) {
-      createGuest();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, token]);
-
   const [wsClient, setWsClient] = useState();
   const connect = useAsyncTask(
     useCallback(
@@ -77,7 +71,7 @@ export function ChatProvider({ children }) {
     )
   );
   useEffect(() => {
-    if (roomId && token && !wsClient && !connect.loading) {
+    if (roomId && user && token && !wsClient && !connect.loading) {
       const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
       const lk = nextClient.addListener(message => {
         if (message.type === 'message') {
@@ -94,7 +88,7 @@ export function ChatProvider({ children }) {
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, token]);
+  }, [roomId, token, userLoading]);
   useEffect(() => {
     if (wsClient) wsClient.setConnector(connect.run);
   }, [connect.run, wsClient]);
@@ -162,6 +156,7 @@ export function ChatProvider({ children }) {
         isLoading: connect.loading,
         isConnected: wsClient != null,
         isFirstLogin,
+        setFirstLogin,
         sendMessage,
         messages,
       }}
