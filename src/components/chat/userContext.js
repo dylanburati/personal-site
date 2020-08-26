@@ -17,6 +17,7 @@ export const UserContext = React.createContext({
   token: null,
   authHttp: null,
   user: null,
+  userLoading: false,
   createGuest: () => {},
   register: () => {},
   login: () => {},
@@ -34,7 +35,7 @@ export function UserProvider(props) {
   }, []);
   const detect401 = useCallback(
     json => {
-      if (!json.success && /^(Unauthorized|Network error)/.test(json.message)) {
+      if (!json.success && /^Unauthenticated/.test(json.message)) {
         clearUser();
       }
       return json;
@@ -98,6 +99,7 @@ export function UserProvider(props) {
         token,
         authHttp,
         user,
+        userLoading: token && !user,
         createGuest,
         register,
         login,

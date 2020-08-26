@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useAsyncTask } from '../../hooks/useAsyncTask';
-import { UserContext } from './userContext';
 import { navigate } from 'gatsby';
+import { Tabs } from '../tabs';
+import { UserContext } from './userContext';
+import { useAsyncTask } from '../../hooks/useAsyncTask';
 
-function CreateForm({ handleLogin }) {
+function CreateForm() {
   const { authHttp } = useContext(UserContext);
 
   const [reqTitle, setReqTitle] = useState('');
@@ -65,7 +66,7 @@ function CreateForm({ handleLogin }) {
   );
 }
 
-function JoinForm({ handleLogin }) {
+function JoinForm() {
   const [reqCode, setReqCode] = useState('');
 
   const handleJoin = ev => {
@@ -94,41 +95,17 @@ function JoinForm({ handleLogin }) {
   );
 }
 
-function DashActions({ handleLogin }) {
-  const [tab, setTab] = useState(0);
-  const mainView = [
-    <JoinForm handleLogin={handleLogin} />,
-    <CreateForm handleLogin={handleLogin} />,
-  ][tab];
-  const getClassNames = tabIdx => (tabIdx === tab ? 'border-b' : '');
+function DashActions() {
+  const [activeTab, setActiveTab] = useState(0);
   return (
-    <div>
-      <ul className="flex">
-        <li className="mr-3 flex-1">
-          <button
-            className={
-              'inline-block w-full text-center border-accent-200 hover:bg-paper-darker py-1 px-3 ' +
-              getClassNames(0)
-            }
-            onClick={() => setTab(0)}
-          >
-            Join
-          </button>
-        </li>
-        <li className="flex-1">
-          <button
-            className={
-              'inline-block w-full text-center border-accent-200 hover:bg-paper-darker py-1 px-3 ' +
-              getClassNames(1)
-            }
-            onClick={() => setTab(1)}
-          >
-            Create
-          </button>
-        </li>
-      </ul>
-      {mainView}
-    </div>
+    <Tabs
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      items={['Join', 'Create']}
+    >
+      {activeTab === 0 && <JoinForm />}
+      {activeTab === 1 && <CreateForm />}
+    </Tabs>
   );
 }
 

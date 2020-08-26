@@ -149,6 +149,7 @@ export function ChatProvider({ children }) {
     return () => {
       if (wsClient) wsClient.removeListener(lk);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsClient]);
 
   return (
