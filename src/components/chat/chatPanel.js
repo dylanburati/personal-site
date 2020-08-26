@@ -58,7 +58,7 @@ export function ChatPanel() {
       return { ...m, isConsecutive };
     });
 
-  const panelDiv = useRef(document.createElement('div'));
+  const panelDiv = useRef(null);
   useEffect(() => {
     const array = [...panelDiv.current.children];
     if (array.length) array[array.length - 1].scrollIntoView();
