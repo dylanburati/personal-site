@@ -31,12 +31,15 @@ jobs:
       - name: Run tests
         run: npm run test
       
+      - name: Build
+        run: npm run build
+      
       - name: Push to gh-pages
         env:
           PAGES_GITHUB_TOKEN: ${{ secrets.PAGES_GITHUB_TOKEN }}
         run: |
           MSG="gatsby-site: $(git log --no-decorate --oneline | head -n 1 | sed 's/^[0-9a-f]\+ //')"
-          npx gh-pages \
+          npx gh-pages -d public \
             --repo "https://${GITHUB_ACTOR}:${PAGES_GITHUB_TOKEN}@github.com/dylanburati.github.io.git" \
             --branch master \
             --message "$MSG"
