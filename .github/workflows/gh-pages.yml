@@ -1,0 +1,42 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Deploy to GitHub Pages
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Configure git user
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Set up Node 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run tests
+        run: npm run test
+      
+      - name: Push to gh-pages
+        env:
+          PAGES_GITHUB_TOKEN: ${{ secrets.PAGES_GITHUB_TOKEN }}
+        run: |
+          MSG="gatsby-site: $(git log --no-decorate --oneline | head -n 1 | sed 's/^[0-9a-f]\+ //')"
+          npx gh-pages \
+            --repo "https://${GITHUB_ACTOR}:${PAGES_GITHUB_TOKEN}@github.com/dylanburati.github.io.git" \
+            --branch master \
+            --message "$MSG"
