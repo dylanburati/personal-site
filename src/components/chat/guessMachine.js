@@ -124,7 +124,7 @@ const GuessMachine = () => {
       >
         {step < 2 && (
           <div
-            className="rounded-xl h-full p-2 text-white"
+            className="rounded-xl h-full p-3 text-white leading-tight"
             style={{
               background: `linear-gradient(45deg, ${gradientColor1}, ${gradientColor2})`,
             }}
@@ -137,7 +137,37 @@ const GuessMachine = () => {
             {step === 1 && (
               <>
                 <h3>{question.title}</h3>
-                <span>{question.subtitle}</span>
+                <p className="mb-8">{question.subtitle}</p>
+                {question.sources.map(({ format, url }, idx) => {
+                  const linkText = /\[(.+)\]/.exec(format);
+                  if (!linkText) {
+                    return (
+                      <p className="mb-0 text-sm" key={idx}>
+                        {format}
+                      </p>
+                    );
+                  }
+
+                  const before = format.slice(0, linkText.index);
+                  const after = format.slice(
+                    linkText.index + linkText[0].length
+                  );
+                  return (
+                    <p className="mb-0 text-sm" key={idx}>
+                      {before}
+                      <a
+                        className="hover:underline"
+                        style={{ color: '#afbfff' }}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {linkText[1]}
+                      </a>
+                      {after}
+                    </p>
+                  );
+                })}
               </>
             )}
           </div>
@@ -145,8 +175,8 @@ const GuessMachine = () => {
         {step >= 2 && (
           <LineGraphContainer
             keys={keys}
-            rangeMin={-100}
-            rangeMax={100}
+            rangeMin={question.yMin}
+            rangeMax={question.yMax}
             series={series}
             setSeries={setSeries}
             referenceData={referenceData}
