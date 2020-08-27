@@ -1,6 +1,7 @@
 package-lock.json
 /.ignored
 /.vscode
+/.env
 
 # Logs
 logs

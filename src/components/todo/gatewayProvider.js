@@ -6,75 +6,16 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
+import HttpClient from '../../services/httpClient';
 
-const baseUrl = 'https://relisten.xyz/jsonbin';
+const baseUrl = 'https://relisten.xyz:8082';
 const collectionName = 'todo';
-
-class HttpClient {
-  /**
-   * @param {string} baseUrl The base URL for requests
-   * @param {Record<string, string>} headers The headers to include with every request
-   * @param {Array<(json: object) => PromiseLike<object>>} responseCallbacks
-   * Callbacks to add to the promise chain
-   */
-  constructor(baseUrl, headers = {}, responseCallbacks = []) {
-    this.baseUrl = baseUrl;
-    this.headers = headers;
-    this.responseCallbacks = responseCallbacks;
-  }
-
-  _fetch(path, fetchOpts) {
-    const promise = fetch(`${baseUrl}${path}`, fetchOpts).then(
-      response => response.json(),
-      err => ({
-        message: 'Network error',
-        success: false,
-      })
-    );
-    return this.responseCallbacks.reduce((acc, cur) => acc.then(cur), promise);
-  }
-
-  get(path, additionalHeaders = {}) {
-    return this._fetch(path, {
-      method: 'GET',
-      headers: {
-        ...this.headers,
-        ...additionalHeaders,
-      },
-      referrerPolicy: 'no-referrer',
-    });
-  }
-
-  post(path, data, additionalHeaders = {}) {
-    return this._fetch(path, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.headers,
-        ...additionalHeaders,
-      },
-      referrerPolicy: 'no-referrer',
-      body: JSON.stringify(data),
-    });
-  }
-
-  del(path, additionalHeaders = {}) {
-    return this._fetch(path, {
-      method: 'DELETE',
-      headers: {
-        ...this.headers,
-        ...additionalHeaders,
-      },
-      referrerPolicy: 'no-referrer',
-    });
-  }
-}
-
 const http = new HttpClient(baseUrl);
+const tokenStoreKey = 'todo/auth_token';
 
 function useGateway() {
   const [token, setToken] = useState(
-    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    typeof window !== 'undefined' ? localStorage.getItem(tokenStoreKey) : null
   );
   const [user, setUser] = useState(token ? { username: null } : null);
   const clearUser = useCallback(() => {
@@ -117,7 +58,7 @@ function useGateway() {
       })
       .then(json => {
         if (json.success) {
-          localStorage.setItem('auth_token', json.token);
+          localStorage.setItem(tokenStoreKey, json.token);
           setToken(json.token);
           setUser({ username: json.username });
         }
@@ -126,7 +67,7 @@ function useGateway() {
   };
   const logout = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(tokenStoreKey);
     }
     clearUser();
   };

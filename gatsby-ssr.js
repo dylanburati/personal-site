@@ -10,6 +10,7 @@ const setThemeImmediately = `(function() {
 
 export const onRenderBody = ({ setPreBodyComponents }) => {
   const script = React.createElement('script', {
+    key: 'set-theme-immediately',
     dangerouslySetInnerHTML: {
       __html: setThemeImmediately,
     },

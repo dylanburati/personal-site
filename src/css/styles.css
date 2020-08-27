@@ -36,14 +36,15 @@ button:focus, summary:focus {
 
 :root {
   --light-color-pen: black;
-  --light-color-pen-lighter: theme('colors.gray.700');
-  --light-color-pen-light: theme('colors.gray.500');
+  --light-color-pen-lighter: theme('colors.gray.800');
+  --light-color-pen-light: theme('colors.gray.600');
   --light-color-accent: theme('colors.blue.700');
   --light-color-accent-700: theme('colors.blue.800');
   --light-color-accent-200: theme('colors.blue.500');
   --light-color-paper: white;
   --light-color-paper-darker: theme('colors.gray.200');
   --light-color-paper-dark: theme('colors.gray.300');
+  --light-color-green: theme('colors.green.500');
 
   --dark-color-pen: #ecf0f1;
   --dark-color-pen-lighter: #bdc3c7;
@@ -54,6 +55,7 @@ button:focus, summary:focus {
   --dark-color-paper: #181818;
   --dark-color-paper-darker: #303336;
   --dark-color-paper-dark: #505356;
+  --dark-color-green: theme('colors.green.600');
 
   --color-pen: var(--light-color-pen);
   --color-pen-lighter: var(--light-color-pen-lighter);
@@ -64,6 +66,7 @@ button:focus, summary:focus {
   --color-paper: var(--light-color-paper);
   --color-paper-darker: var(--light-color-paper-darker);
   --color-paper-dark: var(--light-color-paper-dark);
+  --color-green: var(--light-color-green);
 }
 
 body {
@@ -86,6 +89,10 @@ body {
   box-shadow: 0 3px 6px 0px rgba(0, 0, 0, 0.15), 0 1px 4px 1px rgba(0, 0, 0, 0.09);
 }
 
+.touch-action-none {
+  touch-action: none;
+}
+
 [data-theme="dark"] {
   --color-pen: var(--dark-color-pen);
   --color-pen-lighter: var(--dark-color-pen-lighter);
@@ -96,6 +103,7 @@ body {
   --color-paper: var(--dark-color-paper);
   --color-paper-darker: var(--dark-color-paper-darker);
   --color-paper-dark: var(--dark-color-paper-dark);
+  --color-green: var(--dark-color-green);
 
   nav {
     background-color: var(--color-paper);

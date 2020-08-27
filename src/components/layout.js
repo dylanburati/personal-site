@@ -46,14 +46,16 @@ class Layout extends PureComponent {
           themeIcon={this.state.theme === 'dark' ? 'Sun' : 'Moon'}
         />
         <main className={this.props.className}>{this.props.children}</main>
-        <footer className="px-5 mt-10">
-          <div className="container mx-auto pt-5 pb-10 text-sm parskip-0">
-            <p>© Dylan Burati {new Date().getFullYear()}</p>
-            <p>
-              Built with <a href="https://www.gatsbyjs.org">Gatsby</a>
-            </p>
-          </div>
-        </footer>
+        {!this.props.hideFooter && (
+          <footer className="px-5 mt-10">
+            <div className="container mx-auto pt-5 pb-10 text-sm parskip-0">
+              <p>© Dylan Burati {new Date().getFullYear()}</p>
+              <p>
+                Built with <a href="https://www.gatsbyjs.org">Gatsby</a>
+              </p>
+            </div>
+          </footer>
+        )}
       </>
     );
   }
