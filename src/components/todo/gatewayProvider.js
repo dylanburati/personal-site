@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import HttpClient from '../../services/httpClient';
 
-const baseUrl = 'https://relisten.xyz:8082';
+const baseUrl = 'https://relisten.xyz/jsonbin';
 const collectionName = 'todo';
 const http = new HttpClient(baseUrl);
 const tokenStoreKey = 'todo/auth_token';
