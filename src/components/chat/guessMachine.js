@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo, useEffect } from 'react';
+import React, { useReducer, useContext, useMemo, useEffect } from 'react';
 import { Check, FastForward } from 'react-feather';
 import { findLast, findLastIndex } from 'lodash';
 import { ChatContext } from './chatContext';
@@ -10,6 +10,24 @@ import LineGraphContainer, {
 
 export const lineColors = ['#5fe984', '#67f8f0', '#3097f5', '#7b82fa'];
 
+const initialState = () => ({
+  step: 0,
+  question: null,
+  series: [],
+  answers: [],
+  progress: null,
+});
+
+function reducer(state, action) {
+  if (action.type === 'setState') {
+    return { ...state, ...action.data };
+  } else if (action.type === 'reset') {
+    return initialState();
+  } else {
+    throw new Error(`Unknown action type ${action.type}`);
+  }
+}
+
 const GuessMachine = () => {
   const { user = {} } = useContext(UserContext);
   const { isConnected, messages, roomUsers, sendMessage } = useContext(
@@ -17,11 +35,8 @@ const GuessMachine = () => {
   );
 
   // 0 = waiting, 1 = title, 2 = graph, 3 = result
-  const [step, setStep] = useState(0);
-  const [question, setQuestion] = useState(null);
-  const [series, setSeries] = useState([]);
-  const [answers, setAnswers] = useState([]);
-  const [progress, setProgress] = useState(null);
+  const [state, dispatch] = useReducer(reducer, initialState());
+  const { step, question, series, answers, progress } = state;
 
   const keys = question ? question.data.map(e => e.key) : [];
   const allPointsDone = series.length && series.length === keys.length;
@@ -56,39 +71,45 @@ const GuessMachine = () => {
       );
       if (reveal) {
         if (reveal.target === 'guessr:cancel') {
-          setStep(0);
-          setQuestion(null);
-          setProgress(null);
-          setSeries([]);
-          setAnswers([]);
+          dispatch({ type: 'reset' });
         } else if (Date.now() - reveal.time < 10 * 60 * 1000) {
-          setStep(3);
-          setQuestion(start.content);
-          setProgress(null);
-          setSeries([]);
           const answers = reveal.content.result.map(a => ({
             ...a,
             series: a.series.map((pt, i) => ({ ...pt, id: i.toString() })),
           }));
-          setAnswers(answers);
+          dispatch({
+            type: 'setState',
+            data: {
+              step: 3,
+              question: start.content,
+              progress: null,
+              answers: answers,
+              series: [],
+            },
+          });
         }
       } else {
         const progress = findLast(
           gameMessages.slice(startIdx),
           m => m.target === 'guessr:progress'
         );
-        if (progress) {
-          setProgress(progress.content);
-        } else {
-          setProgress(null);
-        }
         const nextQuestion = { id: start.id, ...start.content };
+        let nextState = {
+          progress: progress ? progress.content : null,
+        };
         if (!question || question.id !== nextQuestion.id) {
-          setStep(1);
-          setQuestion(nextQuestion);
-          setSeries([]);
-          setAnswers([]);
+          nextState = {
+            ...nextState,
+            step: 1,
+            question: nextQuestion,
+            series: [],
+            answers: [],
+          };
         }
+        dispatch({
+          type: 'setState',
+          data: nextState,
+        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,11 +118,8 @@ const GuessMachine = () => {
   const handleForward = ev => {
     if (step === 0 || step === 3) {
       sendMessage({ action: 'guessr:start', data: { type: 'LineGraph' } });
-      setQuestion(null);
-      setSeries([]);
-      setAnswers([]);
     } else if (step === 1) {
-      setStep(2);
+      dispatch({ type: 'setState', data: { step: 2 } });
     } else if (step === 2 && allPointsDone) {
       sendMessage({ action: 'guessr:submit', data: { series } });
     }
@@ -178,7 +196,9 @@ const GuessMachine = () => {
             rangeMin={question.yMin}
             rangeMax={question.yMax}
             series={series}
-            setSeries={setSeries}
+            setSeries={nextSeries =>
+              dispatch({ type: 'setState', data: { series: nextSeries } })
+            }
             referenceData={referenceData}
           />
         )}
