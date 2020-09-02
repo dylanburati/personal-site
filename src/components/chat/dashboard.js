@@ -11,7 +11,7 @@ function Dashboard({ handleOpen }) {
   const [list, setList] = useState([]);
   const getRooms = useAsyncTask(
     useCallback(async client => {
-      const data = await client.get('/g');
+      const data = await client.get('/g/chat');
       if (data.success) setList(data.conversations);
     }, [])
   );

@@ -1,11 +1,21 @@
-import React, { useReducer, useEffect, useCallback } from 'react';
+import React, {
+  useReducer,
+  useEffect,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
+import { globalHistory } from '@reach/router';
+import qs from 'querystring';
 import { ArrowLeft } from 'react-feather';
 import PropTypes from 'prop-types';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { takeRightWhile, times } from 'lodash';
 import TodoRow from './todoRow';
 import { parseFileCommand, parseLineCommand } from './commandParser';
-import { useContextGateway } from './gatewayProvider';
+import { ChatContext } from '../chat/chatContext';
+import { UserContext } from '../chat/userContext';
+import { useAsyncTask } from '../../hooks/useAsyncTask';
 
 /**
  * All schemas must create empty rows as arrays, starting with the numeric string `id`,
@@ -77,10 +87,16 @@ function reducer(state, action) {
   if (action.kind === 'LOAD') {
     return {
       ...state,
+      name: action.name,
       revisionNum: action.revisionNum,
       schema: action.schema,
       values: action.values,
       nextId: action.nextId,
+    };
+  } else if (action.kind === 'SET_NAME') {
+    return {
+      ...state,
+      name: action.name,
     };
   } else if (action.kind === 'SET_COMMAND') {
     return {
@@ -126,23 +142,38 @@ function reducer(state, action) {
   }
 }
 
-function TodoTable({ name, status, handleBack, handleName }) {
+function TodoTable({ handleBack, handleName }) {
+  const { location } = globalHistory;
+  const sheetId = useMemo(() => {
+    const { id } = qs.parse(location.search.replace(/^\?/, ''));
+    return id;
+  }, [location.search]);
+
   const [state, dispatch] = useReducer(reducer, {
     command: '',
+    name: null,
     schema: null,
     values: null,
     valuesHistory: [],
     nextId: 0,
   });
-  const { load, save, share } = useContextGateway();
+  const { authHttp, user } = useContext(UserContext);
+  const { messages, sendMessage } = useContext(ChatContext);
+
+  const snapshots = messages.filter(m => m.target === 'todo:save' && m.content);
 
   const handleLoad = useCallback(
     data => {
-      const { schema: savedSchema, values, revisionNum } = data;
+      const { schema: savedSchema, name, values, revisionNum } = data;
       const schema = schemas.find(e => e.name === savedSchema.name);
+      if (!schema) {
+        console.error(`Schema ${savedSchema.name} was deleted`);
+        return;
+      }
       if (Array.isArray(values) && values.every(schema.isValidRow)) {
         dispatch({
           kind: 'LOAD',
+          name,
           revisionNum,
           schema,
           values,
@@ -156,7 +187,16 @@ function TodoTable({ name, status, handleBack, handleName }) {
   );
 
   useEffect(() => {
-    if (status === 'unnamed') {
+    if (snapshots.length) {
+      const toLoad = snapshots[snapshots.length - 1];
+      handleLoad(toLoad.content);
+      // TODO attempt merge with current values
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleLoad, snapshots.length]);
+
+  useEffect(() => {
+    if (!sheetId) {
       dispatch({
         kind: 'LOAD',
         revisionNum: 1,
@@ -165,50 +205,50 @@ function TodoTable({ name, status, handleBack, handleName }) {
         nextId: 50,
       });
     }
-    if (status !== 'saved') return;
-    let ignore = false;
-
-    load(name).then(json => {
-      if (ignore) return;
-      if (!json.success) {
-        return handleBack();
-      } else {
-        handleLoad(json.data);
-      }
-    });
-
-    return () => {
-      ignore = true;
-    };
-  }, [handleBack, handleLoad, name, load, status]);
+  }, [sheetId]);
 
   useEffect(() => {
-    let ignore = false;
-    if (status !== 'unnamed' && state.schema && state.values) {
-      save(name, {
-        data: {
-          revisionNum: state.revisionNum,
-          schema: {
-            name: state.schema.name,
-            version: state.schema.version,
+    if (sheetId && state.schema && state.values) {
+      let ignore = false;
+      const run = async () => {
+        await new Promise(resolve =>
+          setTimeout(resolve, snapshots.length ? 2000 : 0)
+        );
+        if (ignore) return;
+        sendMessage({
+          action: 'todo:save',
+          data: {
+            name: state.name,
+            revisionNum: state.revisionNum + 1,
+            schema: {
+              name: state.schema.name,
+              version: state.schema.version,
+            },
+            values: state.values,
           },
-          values: state.values,
-        },
-      }).then(res => {
-        if (ignore || !res || !res.success) return;
-        console.log('Saved');
-        if (res.data) {
-          handleLoad(res.data);
-        }
-      });
-    }
+        });
+      };
 
-    return () => {
-      ignore = true;
-    };
+      run();
+      return () => {
+        ignore = true;
+      };
+    }
     // Use state.valuesHistory to track when local changes are entered
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleLoad, name, save, state.valuesHistory, status]);
+  }, [handleLoad, state.name, state.valuesHistory, sheetId]);
+
+  const handleFirstSave = useAsyncTask(async (title, nickname) => {
+    if (!authHttp) return; // todo guest
+
+    const json = await authHttp.post('/g', { title, nickname, tags: ['todo'] });
+    if (json.success) {
+      dispatch({ kind: 'SET_NAME', name: title });
+      handleName(json.conversationId);
+    } else {
+      console.error(json.message || 'Unknown error');
+    }
+  });
 
   const handleChange = (rowIndex, colIndex, val) => {
     const nextValues = state.values.slice();
@@ -253,22 +293,8 @@ function TodoTable({ name, status, handleBack, handleName }) {
           return;
         }
         if (fileCmd.command === 'w') {
-          if (status === 'unnamed') {
-            save(
-              fileCmd.args[0],
-              {
-                data: {
-                  schema: {
-                    name: state.schema.name,
-                    version: state.schema.version,
-                  },
-                  values: state.values,
-                },
-              },
-              0
-            ).then(res => {
-              if (res && res.success) handleName(fileCmd.args[0]);
-            });
+          if (!sheetId) {
+            handleFirstSave.run(fileCmd.args[0], user.username);
           }
         } else if (fileCmd.command === 'schema') {
           const reqSchema = schemas.find(e => e.name === fileCmd.args[0]);
@@ -281,10 +307,10 @@ function TodoTable({ name, status, handleBack, handleName }) {
             });
           }
         } else if (fileCmd.command === 'share') {
-          const username = fileCmd.args[0];
-          if (status === 'saved' && !name.includes('/')) {
-            share(name, username);
-          }
+          // const username = fileCmd.args[0];
+          // if (status === 'saved' && !name.includes('/')) {
+          //   share(name, username);
+          // }
         }
         return;
       }
@@ -342,51 +368,52 @@ function TodoTable({ name, status, handleBack, handleName }) {
   }
   const maxDigits = 1 + Math.floor(Math.log10(state.values.length));
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex items-center mb-3">
-        <button
-          className="hover:bg-paper-darker text-accent p-1 rounded-full"
-          onClick={handleBack}
-        >
-          <ArrowLeft className="stroke-current" />
-        </button>
-        <input
-          className="p-2 font-mono text-sm flex-grow text-white ml-3"
-          style={{ backgroundColor: 'var(--dark-color-paper-darker)' }}
-          value={state.command}
-          onChange={ev =>
-            dispatch({ kind: 'SET_COMMAND', command: ev.target.value })
-          }
-          onKeyDown={handleCmdlineKey}
-        ></input>
-      </div>
-      <Droppable droppableId="main">
-        {provided => (
-          <div {...provided.droppableProps} ref={provided.innerRef}>
-            {state.values.map((e, rowIndex) => (
-              <TodoRow
-                key={e[0]}
-                id={e[0]}
-                index={rowIndex}
-                columns={state.schema.columns}
-                numWidth={maxDigits * 10}
-                values={e}
-                handleChange={(colIndex, val) =>
-                  handleChange(rowIndex, colIndex, val)
-                }
-              />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <div>
+      <h2 className="mb-3">{state.name || 'New sheet'}</h2>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex items-center mb-3">
+          <button
+            className="hover:bg-paper-darker text-accent p-1 rounded-full"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="stroke-current" />
+          </button>
+          <input
+            className="p-2 font-mono text-sm flex-grow text-white ml-3"
+            style={{ backgroundColor: 'var(--dark-color-paper-darker)' }}
+            value={state.command}
+            onChange={ev =>
+              dispatch({ kind: 'SET_COMMAND', command: ev.target.value })
+            }
+            onKeyDown={handleCmdlineKey}
+          ></input>
+        </div>
+        <Droppable droppableId="main">
+          {provided => (
+            <div {...provided.droppableProps} ref={provided.innerRef}>
+              {state.values.map((e, rowIndex) => (
+                <TodoRow
+                  key={e[0]}
+                  id={e[0]}
+                  index={rowIndex}
+                  columns={state.schema.columns}
+                  numWidth={maxDigits * 10}
+                  values={e}
+                  handleChange={(colIndex, val) =>
+                    handleChange(rowIndex, colIndex, val)
+                  }
+                />
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </div>
   );
 }
 
 TodoTable.propTypes = {
-  name: PropTypes.string.isRequired,
-  status: PropTypes.oneOf(['unnamed', 'unsaved', 'saved']).isRequired,
   handleBack: PropTypes.func.isRequired,
   handleName: PropTypes.func.isRequired,
 };

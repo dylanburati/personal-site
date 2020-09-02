@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { globalHistory } from '@reach/router';
-import qs from 'querystring';
 import WSClient from '../../services/wsClient';
 import { UserContext } from './userContext';
 import { useAsyncTask } from '../../hooks/useAsyncTask';
@@ -19,14 +17,9 @@ export const ChatContext = React.createContext({
   messages: [],
 });
 
-const wsUrl = 'wss://datagame.live/ws';
-export function ChatProvider({ children }) {
-  const { location } = globalHistory;
+const wsUrl = 'ws://localhost:7000/ws';
+export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   const { token, user, userLoading } = useContext(UserContext);
-  const [roomId] = useState(() => {
-    const { room } = qs.parse(location.search.replace(/^\?/, ''));
-    return room;
-  });
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
   const [roomUsers, setRoomUsers] = useState({});
@@ -64,10 +57,10 @@ export function ChatProvider({ children }) {
         setFirstLogin(msg.isFirstLogin);
         client.send({
           action: 'getMessages',
-          data: {},
+          data: getMessagesArgs,
         });
       },
-      [token]
+      [getMessagesArgs, token]
     )
   );
   useEffect(() => {

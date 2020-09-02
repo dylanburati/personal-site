@@ -14,7 +14,7 @@ function CreateForm() {
   const create = useAsyncTask(async (title, nickname) => {
     if (!authHttp) return; // todo guest
 
-    const json = await authHttp.post('/g', { title, nickname });
+    const json = await authHttp.post('/g', { title, nickname, tags: ['chat'] });
     if (json.success) {
       navigate(`/chat?room=${json.conversationId}`);
     } else {
