@@ -158,7 +158,7 @@ function TodoTable({ handleBack, handleName }) {
     nextId: 0,
   });
   const { authHttp, user } = useContext(UserContext);
-  const { messages, sendMessage } = useContext(ChatContext);
+  const { isConnected, messages, sendMessage } = useContext(ChatContext);
 
   const snapshots = messages.filter(m => m.target === 'todo:save' && m.content);
 
@@ -236,7 +236,7 @@ function TodoTable({ handleBack, handleName }) {
     }
     // Use state.valuesHistory to track when local changes are entered
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleLoad, state.name, state.valuesHistory, sheetId]);
+  }, [handleLoad, isConnected, state.name, state.valuesHistory, sheetId]);
 
   const handleFirstSave = useAsyncTask(async (title, nickname) => {
     if (!authHttp) return; // todo guest
