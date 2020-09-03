@@ -67,16 +67,28 @@ const IndexPage = () => {
   const aboutMe = (
     <>
       <p>
-        I am a sophomore at Northeastern University majoring in Electrical and
-        Computer Engineering. My background knowledge comes from developing
-        applications in Java (Android and standalone), but my goal is to gain
-        expertise in both software and hardware.
+        I'm a junior at Northeastern University majoring in Computer Engineering
+        and Computer Science. I've been developing side projects for 4 years,
+        and I recently completed an 8-month co-op working in education
+        technology. I'm interested in continuing with web development as well as
+        branching into data science and machine learning.
       </p>
       <p>
-        In 2017, I began listening to a lot more music, and I relearned to play
-        the piano. Soon after, I taught myself basic music production, and
-        eventually released an album of piano pieces on Bandcamp. I am also an
-        avid skier and enjoy taking pictures like the one in the header.
+        Outside of software, I love to ski, play piano, and take photos like the
+        one in the header. I have one album of piano pieces on{' '}
+        <a
+          className="text-accent hover:text-accent-700 hover:underline"
+          href="http://dylanburati.bandcamp.com/album/at-rest-in-a-position-comfortable-for-breathing"
+          rel="noreferrer"
+        >
+          Bandcamp
+        </a>
+        , which was inspired by{' '}
+        <em className="font-medium">Eluvium &ndash; Copia</em> and{' '}
+        <em className="font-medium">
+          Angelo Badalamenti &ndash; Soundtrack from Twin Peaks
+        </em>
+        .
       </p>
     </>
   );
@@ -86,18 +98,26 @@ const IndexPage = () => {
       <ProjectCard
         title="This site"
         description="Portfolio, blog posts, and a small self-hosted todo list app"
-        technologies="Gatsby, React, GraphQL"
+        technologies="Gatsby, React, GraphQL (frontend); Kotlin, PostgreSQL (backend)"
       >
-        <ProjectLinks category="Todo">
+        <ProjectLinks category="Todo App">
           <NavLink text="Login" href="/todo" />
-          <NavLink text="Register" href="/todo?register=1" />
+        </ProjectLinks>
+        <ProjectLinks category="Github">
+          <NavLink
+            text="gatsby-site"
+            href="https://github.com/dylanburati/gatsby-site"
+          />
+          <NavLink
+            text="jsonbin2"
+            href="https://github.com/dylanburati/jsonbin2"
+          />
         </ProjectLinks>
       </ProjectCard>
       <ProjectCard
         title="Sampler"
         description="Android app for creating and playing musical instruments from samples"
         technologies="Java, JUnit, AndroidX Room, Python, PureData, Node.js"
-        concepts="MVC architecture, API design"
       >
         <ProjectLinks category="GitHub">
           <NavLink
@@ -114,27 +134,6 @@ const IndexPage = () => {
           />
         </ProjectLinks>
         {generateBlogProjectLinks(data, 'Sampler')}
-      </ProjectCard>
-      <ProjectCard
-        title="Relisten"
-        description="Web app for ranking albums or songs, and sharing them"
-        technologies="JavaScript, Vue.js, HTML, CSS, PHP, SQL, Java,
-            WebSockets, Cypress, Apache Solr, Nginx, Let's Encrypt"
-        concepts="Continuous integration testing, system administration,
-            database administration"
-      >
-        <ProjectLinks category="GitHub">
-          <NavLink
-            text="Relisten"
-            href="https://github.com/dylanburati/relisten"
-          />
-          <NavLink text="CNChat" href="https://github.com/dylanburati/CNChat" />
-        </ProjectLinks>
-        <ProjectLinks category="Relisten">
-          <NavLink text="Sign up" href="https://relisten.xyz" />
-          <NavLink text="Try it out" href="https://relisten.xyz/dashboard" />
-        </ProjectLinks>
-        {generateBlogProjectLinks(data, 'Relisten')}
       </ProjectCard>
     </>
   );

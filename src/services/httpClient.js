@@ -65,7 +65,7 @@ export default class HttpClient {
     });
   }
 
-  del(path, additionalHeaders = {}) {
+  del(path, data, additionalHeaders = {}) {
     return this._fetch(path, {
       method: 'DELETE',
       headers: {
@@ -73,6 +73,7 @@ export default class HttpClient {
         ...additionalHeaders,
       },
       referrerPolicy: 'no-referrer',
+      body: JSON.stringify(data),
     });
   }
 }

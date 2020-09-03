@@ -4,10 +4,10 @@ import { UserContext } from './userContext';
 import { Tabs } from '../tabs';
 import { useAsyncTask } from '../../hooks/useAsyncTask';
 
-export function RegisterForm({ closeModal }) {
+export function RegisterForm({ onCancel, onSuccess, allowGuest = true }) {
   const { createGuest, register } = useContext(UserContext);
 
-  const [isGuest, setIsGuest] = useState(true);
+  const [isGuest, setIsGuest] = useState(allowGuest);
   const [inputUsername, setInputUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState();
@@ -20,7 +20,7 @@ export function RegisterForm({ closeModal }) {
       json = await register(inputUsername, password);
     }
 
-    if (json.success) closeModal();
+    if (json.success && onSuccess) onSuccess();
     else setErrorMessage(json.message || 'Unknown error');
   });
   const handleSubmit = ev => {
@@ -44,17 +44,24 @@ export function RegisterForm({ closeModal }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        className="mr-2 mt-1 mb-3"
-        type="checkbox"
-        name="isGuest"
-        checked={isGuest}
-        onChange={ev => setIsGuest(ev.currentTarget.checked)}
-      />
-      <label className="inline-block text-sm text-pen-light" htmlFor="username">
-        Use guest account?
-      </label>
+    <form className="pt-1" onSubmit={handleSubmit}>
+      {allowGuest && (
+        <>
+          <input
+            className="mr-2 mb-3"
+            type="checkbox"
+            name="isGuest"
+            checked={isGuest}
+            onChange={ev => setIsGuest(ev.currentTarget.checked)}
+          />
+          <label
+            className="inline-block text-sm text-pen-light"
+            htmlFor="username"
+          >
+            Use guest account?
+          </label>
+        </>
+      )}
       {!isGuest && (
         <>
           <label className="block text-sm text-pen-light" htmlFor="username">
@@ -88,18 +95,20 @@ export function RegisterForm({ closeModal }) {
         </>
       )}
       <div className="flex justify-end mt-3 -mx-1">
-        <button
-          type="button"
-          onClick={closeModal}
-          className="bg-gray-400 hover:bg-gray-500 text-black py-1 px-3 m-1 rounded"
-        >
-          Cancel
-        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gray-400 hover:bg-gray-500 text-black py-1 px-3 m-1 rounded"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 m-1 rounded"
         >
-          Create
+          Register
         </button>
       </div>
       {errorMessage && <p className="mt-2 mb-0 text-danger">{errorMessage}</p>}
@@ -107,7 +116,7 @@ export function RegisterForm({ closeModal }) {
   );
 }
 
-export function LoginForm({ closeModal }) {
+export function LoginForm({ onCancel, onSuccess }) {
   const { login } = useContext(UserContext);
   const [inputUsername, setInputUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -115,7 +124,7 @@ export function LoginForm({ closeModal }) {
 
   const submit = useAsyncTask(async () => {
     const json = await login(inputUsername, password);
-    if (json.success) closeModal();
+    if (json.success && onSuccess) onSuccess();
     else setErrorMessage(json.message || 'Unknown error');
   });
   const handleSubmit = ev => {
@@ -124,7 +133,7 @@ export function LoginForm({ closeModal }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="pt-1" onSubmit={handleSubmit}>
       <label className="block text-sm text-pen-light" htmlFor="username">
         Username
       </label>
@@ -154,13 +163,15 @@ export function LoginForm({ closeModal }) {
         }}
       />
       <div className="flex justify-end mt-3 -mx-1">
-        <button
-          type="button"
-          onClick={closeModal}
-          className="bg-gray-400 hover:bg-gray-500 text-black py-1 px-3 m-1 rounded"
-        >
-          Cancel
-        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gray-400 hover:bg-gray-500 text-black py-1 px-3 m-1 rounded"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 m-1 rounded"
@@ -188,8 +199,12 @@ export function AccountModal({ showModal, closeModal, defaultTab }) {
         setActiveTab={setActiveTab}
         items={['Register', 'Log in']}
       >
-        {activeTab === 0 && <RegisterForm closeModal={closeModal} />}
-        {activeTab === 1 && <LoginForm closeModal={closeModal} />}
+        {activeTab === 0 && (
+          <RegisterForm onCancel={closeModal} onSuccess={closeModal} />
+        )}
+        {activeTab === 1 && (
+          <LoginForm onCancel={closeModal} onSuccess={closeModal} />
+        )}
       </Tabs>
     </Modal>
   );

@@ -1,51 +1,27 @@
 import React, { useState } from 'react';
-import { useContextGateway } from './gatewayProvider';
+import { Tabs } from '../tabs';
+import { LoginForm, RegisterForm } from '../chat/accountModal';
 
-function LoginForm({ handleLogin }) {
-  const { login } = useContextGateway();
-  const [error, setError] = useState(null);
-
-  const handleSubmit = ev => {
-    ev.preventDefault();
-    const { username, password } = ev.target.elements;
-    login(username.value, password.value).then(res => {
-      if (res.success) {
-        handleLogin();
-      } else {
-        setError(res.message ? res.message : 'Unknown error');
-      }
-    });
-  };
-
+export function LoginTabs({ handleLogin }) {
+  const [activeTab, setActiveTab] = useState(0);
   return (
-    <div className="flex justify-center mt-6">
-      <form onSubmit={handleSubmit}>
-        <input
-          name="username"
-          placeholder="Username"
-          type="text"
-          autoComplete="off"
-          className="block bg-paper-darker hover:bg-paper-dark rounded p-2 mb-2"
-          onChange={() => setError(null)}
-        />
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          autoComplete="off"
-          className="block bg-paper-darker hover:bg-paper-dark rounded p-2 mb-2"
-          onChange={() => setError(null)}
-        />
-        {error !== null ? <p className="text-danger">{error}</p> : null}
-        <button
-          className="bg-accent-200 hover:bg-accent text-white py-2 px-4 rounded"
-          type="submit"
+    <div>
+      <h2 className="mb-3">Todo App</h2>
+      <div className="flex mt-6 justify-center">
+        <Tabs
+          className="mb-3 max-w-sm flex-1"
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          items={['Log in', 'Register']}
         >
-          Login
-        </button>
-      </form>
+          {activeTab === 0 && <LoginForm onSuccess={handleLogin} />}
+          {activeTab === 1 && (
+            <RegisterForm onSuccess={handleLogin} allowGuest={false} />
+          )}
+        </Tabs>
+      </div>
     </div>
   );
 }
 
-export default LoginForm;
+export default LoginTabs;

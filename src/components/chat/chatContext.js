@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { globalHistory } from '@reach/router';
-import qs from 'querystring';
 import WSClient from '../../services/wsClient';
 import { UserContext } from './userContext';
 import { useAsyncTask } from '../../hooks/useAsyncTask';
@@ -20,13 +18,8 @@ export const ChatContext = React.createContext({
 });
 
 const wsUrl = 'wss://datagame.live/ws';
-export function ChatProvider({ children }) {
-  const { location } = globalHistory;
-  const { token, user, userLoading } = useContext(UserContext);
-  const [roomId] = useState(() => {
-    const { room } = qs.parse(location.search.replace(/^\?/, ''));
-    return room;
-  });
+export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
+  const { token, user } = useContext(UserContext);
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
   const [roomUsers, setRoomUsers] = useState({});
@@ -64,14 +57,14 @@ export function ChatProvider({ children }) {
         setFirstLogin(msg.isFirstLogin);
         client.send({
           action: 'getMessages',
-          data: {},
+          data: getMessagesArgs,
         });
       },
-      [token]
+      [getMessagesArgs, token]
     )
   );
   useEffect(() => {
-    if (roomId && user && token && !wsClient && !connect.loading) {
+    if (roomId && user && token) {
       const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
       const lk = nextClient.addListener(message => {
         if (message.type === 'message') {
@@ -85,10 +78,12 @@ export function ChatProvider({ children }) {
       return () => {
         nextClient.disconnect();
         nextClient.removeListener(lk);
+        setWsClient(current => (current === nextClient ? undefined : current));
+        setMessages([]);
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, token, userLoading]);
+  }, [roomId, user, token]);
   useEffect(() => {
     if (wsClient) wsClient.setConnector(connect.run);
   }, [connect.run, wsClient]);

@@ -31,7 +31,7 @@ function ChatApp() {
   }
   return (
     <ScreenWrapper className="px-5" innerClassName="container mx-auto">
-      <ChatProvider>
+      <ChatProvider roomId={roomId}>
         <Chat />
       </ChatProvider>
     </ScreenWrapper>
