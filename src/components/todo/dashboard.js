@@ -31,8 +31,13 @@ function Dashboard({ handleOpen, handleCreate, handleBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authHttp, user]);
 
-  const deleteBins = () => {
-    console.error('delete is not implemented');
+  const deleteBins = async () => {
+    const data = await authHttp.del('/g', {
+      ids: selected.map(item => item.id),
+    });
+    if (data.success) {
+      setBins(arr => arr.filter(item => !selected.some(e => e.id === item.id)));
+    }
   };
 
   return (
@@ -49,7 +54,7 @@ function Dashboard({ handleOpen, handleCreate, handleBack }) {
         {selected.length > 0 && (
           <button
             className="hover:bg-paper-darker text-accent py-1 px-2 mb-1 rounded"
-            onClick={() => deleteBins(selected)}
+            onClick={deleteBins}
           >
             <Trash2 className="stroke-current inline" />
             <span className="font-bold text-sm uppercase mx-1">Delete</span>

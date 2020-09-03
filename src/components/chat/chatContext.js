@@ -19,7 +19,7 @@ export const ChatContext = React.createContext({
 
 const wsUrl = 'ws://localhost:7000/ws';
 export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
-  const { token, user, userLoading } = useContext(UserContext);
+  const { token, user } = useContext(UserContext);
   const [roomTitle, setRoomTitle] = useState('');
   const [nickname, setNickname] = useState('');
   const [roomUsers, setRoomUsers] = useState({});
@@ -64,7 +64,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
     )
   );
   useEffect(() => {
-    if (roomId && user && token && !wsClient && !connect.loading) {
+    if (roomId && user && token) {
       const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
       const lk = nextClient.addListener(message => {
         if (message.type === 'message') {
@@ -78,10 +78,12 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
       return () => {
         nextClient.disconnect();
         nextClient.removeListener(lk);
+        setWsClient(current => (current === nextClient ? undefined : current));
+        setMessages([]);
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, token, userLoading]);
+  }, [roomId, user, token]);
   useEffect(() => {
     if (wsClient) wsClient.setConnector(connect.run);
   }, [connect.run, wsClient]);
