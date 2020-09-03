@@ -98,7 +98,7 @@ const IndexPage = () => {
       <ProjectCard
         title="This site"
         description="Portfolio, blog posts, and a small self-hosted todo list app"
-        technologies="Gatsby, React, GraphQL (frontend); Kotlin, PostgresQL (backend)"
+        technologies="Gatsby, React, GraphQL (frontend); Kotlin, PostgreSQL (backend)"
       >
         <ProjectLinks category="Todo App">
           <NavLink text="Login" href="/todo" />
