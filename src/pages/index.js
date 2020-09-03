@@ -118,7 +118,6 @@ const IndexPage = () => {
         title="Sampler"
         description="Android app for creating and playing musical instruments from samples"
         technologies="Java, JUnit, AndroidX Room, Python, PureData, Node.js"
-        concepts="MVC architecture, API design"
       >
         <ProjectLinks category="GitHub">
           <NavLink
