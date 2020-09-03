@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import HttpClient from '../../services/httpClient';
 
-const baseUrl = 'http://localhost:7000';
-const tokenStoreKey = 'chat.local/auth_token';
+const baseUrl = 'https://datagame.live';
+const tokenStoreKey = 'chat/auth_token';
 
 const localStorageOrDefault = (key, dfault) => {
   if (typeof window === 'undefined') return dfault;

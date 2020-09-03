@@ -17,7 +17,7 @@ export const ChatContext = React.createContext({
   messages: [],
 });
 
-const wsUrl = 'ws://localhost:7000/ws';
+const wsUrl = 'wss://datagame.live/ws';
 export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   const { token, user } = useContext(UserContext);
   const [roomTitle, setRoomTitle] = useState('');
