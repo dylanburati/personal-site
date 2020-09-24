@@ -20,8 +20,11 @@ export function RegisterForm({ onCancel, onSuccess, allowGuest = true }) {
       json = await register(inputUsername, password);
     }
 
-    if (json.success && onSuccess) onSuccess();
-    else setErrorMessage(json.message || 'Unknown error');
+    if (json.success) {
+      if (onSuccess) onSuccess();
+    } else {
+      setErrorMessage(json.message || 'Unknown error');
+    }
   });
   const handleSubmit = ev => {
     ev.preventDefault();
@@ -124,8 +127,11 @@ export function LoginForm({ onCancel, onSuccess }) {
 
   const submit = useAsyncTask(async () => {
     const json = await login(inputUsername, password);
-    if (json.success && onSuccess) onSuccess();
-    else setErrorMessage(json.message || 'Unknown error');
+    if (json.success) {
+      if (onSuccess) onSuccess();
+    } else {
+      setErrorMessage(json.message || 'Unknown error');
+    }
   });
   const handleSubmit = ev => {
     ev.preventDefault();

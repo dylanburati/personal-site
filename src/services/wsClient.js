@@ -82,10 +82,18 @@ export default class WSClient {
         if (response.type === listenForType) {
           this.removeListener(lk);
           return resolve(response);
+        } else if (response.type === 'error') {
+          this.removeListener(lk);
+          const err = new Error('Error response in websocket');
+          err.originalMessage = response;
+          return reject(err);
         }
       });
       this.sendSync(message);
-      setTimeout(() => reject('Timeout waiting for websocket response'), 30000);
+      setTimeout(
+        () => reject(new Error('Timeout waiting for websocket response')),
+        30000
+      );
     });
   }
 }

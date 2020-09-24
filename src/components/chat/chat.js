@@ -12,9 +12,13 @@ import '../../css/chat.css';
 
 function Chat() {
   const { authHttp, user, userLoading } = useContext(UserContext);
-  const { isFirstLogin, setFirstLogin, roomTitle, sendMessage } = useContext(
-    ChatContext
-  );
+  const {
+    errors,
+    isFirstLogin,
+    setFirstLogin,
+    roomTitle,
+    sendMessage,
+  } = useContext(ChatContext);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
 
@@ -24,6 +28,22 @@ function Chat() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userLoading]);
+
+  const handleBack = () => {
+    navigate(`/chat`);
+  };
+
+  useEffect(() => {
+    const unauth = errors.find(
+      e => e.message && e.message.startsWith('Unauthenticated')
+    );
+    const invalid = errors.find(
+      e => e.message && e.message.startsWith('Invalid conversation id')
+    );
+    if (unauth || invalid) {
+      handleBack();
+    }
+  }, [errors]);
 
   useEffect(() => {
     if (isFirstLogin) {
@@ -60,10 +80,6 @@ function Chat() {
     }
     sendMessage({ action: 'chat', data });
     return true;
-  };
-
-  const handleBack = () => {
-    navigate(`/chat`);
   };
 
   return (

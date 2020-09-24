@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 /**
  * Returns the function along with info about the most recent call
@@ -8,6 +8,13 @@ import { useState } from 'react';
 export const useAsyncTask = asyncFn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState();
+  const cancelRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      // Cancel any async state updates that come in after unmounting
+      cancelRef.current = true;
+    };
+  }, []);
 
   const run = async (...args) => {
     setLoading(true);
@@ -15,9 +22,9 @@ export const useAsyncTask = asyncFn => {
     try {
       return await asyncFn(...args);
     } catch (err) {
-      setError(err);
+      if (!cancelRef.current) setError(err);
     } finally {
-      setLoading(false);
+      if (!cancelRef.current) setLoading(false);
     }
   };
 

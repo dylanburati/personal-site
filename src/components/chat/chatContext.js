@@ -15,6 +15,7 @@ export const ChatContext = React.createContext({
   setFirstLogin: () => {},
   sendMessage: () => {},
   messages: [],
+  errors: [],
 });
 
 const wsUrl = 'wss://datagame.live/ws';
@@ -25,6 +26,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   const [roomUsers, setRoomUsers] = useState({});
   const [isFirstLogin, setFirstLogin] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [errors, setErrors] = useState([]);
 
   const mergeMessages = useCallback(toAdd => {
     setMessages(messages => {
@@ -39,7 +41,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
           next[replaceIdx] = m;
         }
       });
-      setMessages(next);
+      return next;
     });
   }, []);
 
@@ -47,18 +49,25 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   const connect = useAsyncTask(
     useCallback(
       async client => {
-        const msg = await client.sendAndListen({
-          action: 'login',
-          data: { token },
-        });
-        setWsClient(client);
-        setRoomTitle(msg.title);
-        setNickname(msg.nickname);
-        setFirstLogin(msg.isFirstLogin);
-        client.send({
-          action: 'getMessages',
-          data: getMessagesArgs,
-        });
+        try {
+          const msg = await client.sendAndListen({
+            action: 'login',
+            data: { token },
+          });
+          setWsClient(client);
+          setRoomTitle(msg.title);
+          setNickname(msg.nickname);
+          setFirstLogin(msg.isFirstLogin);
+          client.send({
+            action: 'getMessages',
+            data: getMessagesArgs,
+          });
+        } catch (err) {
+          console.error(err.message);
+          if (err.originalMessage) {
+            setErrors(prev => [...prev, err.originalMessage]);
+          }
+        }
       },
       [getMessagesArgs, token]
     )
@@ -79,6 +88,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
         nextClient.disconnect();
         nextClient.removeListener(lk);
         setWsClient(current => (current === nextClient ? undefined : current));
+        setErrors([]);
         setMessages([]);
       };
     }
@@ -97,11 +107,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
 
     const lk = wsClient.addListener(message => {
       if (message.type === 'error') {
-        if (typeof message.message === 'string') {
-          if (message.message.startsWith('Unauthenticated')) wsClient.connect();
-          else if (message.message.startsWith('Invalid conversation id'))
-            navigate('/chat');
-        }
+        setErrors(prev => [...prev, message]);
       }
     });
 
@@ -154,6 +160,7 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
         setFirstLogin,
         sendMessage,
         messages,
+        errors,
       }}
     >
       {children}

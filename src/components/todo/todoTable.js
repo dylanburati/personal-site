@@ -158,7 +158,22 @@ function TodoTable({ handleBack, handleName }) {
     nextId: 0,
   });
   const { authHttp, user } = useContext(UserContext);
-  const { isConnected, messages, sendMessage } = useContext(ChatContext);
+  const { errors, isConnected, messages, sendMessage } = useContext(
+    ChatContext
+  );
+
+  useEffect(() => {
+    const unauth = errors.find(
+      e => e.message && e.message.startsWith('Unauthenticated')
+    );
+    const invalid = errors.find(
+      e => e.message && e.message.startsWith('Invalid conversation id')
+    );
+    if (unauth || invalid) {
+      handleBack();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errors]);
 
   const snapshots = messages.filter(m => m.target === 'todo:save' && m.content);
 
@@ -241,7 +256,12 @@ function TodoTable({ handleBack, handleName }) {
   const handleFirstSave = useAsyncTask(async (title, nickname) => {
     if (!authHttp) return; // todo guest
 
-    const json = await authHttp.post('/g', { title, nickname, tags: ['todo'] });
+    const json = await authHttp.post('/g', {
+      title,
+      nickname,
+      tags: ['todo'],
+      isPrivate: true,
+    });
     if (json.success) {
       dispatch({ kind: 'SET_NAME', name: title });
       handleName(json.conversationId);
@@ -256,6 +276,18 @@ function TodoTable({ handleBack, handleName }) {
     nextValues[rowIndex][colIndex + 1] = val;
     dispatch({ kind: 'SET_VALUES', values: nextValues });
   };
+
+  const handleShare = useAsyncTask(async username => {
+    if (!authHttp || !sheetId) return;
+
+    const json = await authHttp.post('/g/share', {
+      conversationId: sheetId,
+      usernames: [username],
+    });
+    if (!json.success) {
+      console.error(json.message || 'Unknown error');
+    }
+  });
 
   const onDragEnd = result => {
     if (result.destination != null) {
@@ -307,10 +339,7 @@ function TodoTable({ handleBack, handleName }) {
             });
           }
         } else if (fileCmd.command === 'share') {
-          // const username = fileCmd.args[0];
-          // if (status === 'saved' && !name.includes('/')) {
-          //   share(name, username);
-          // }
+          handleShare.run(fileCmd.args[0]);
         }
         return;
       }
