@@ -85,17 +85,22 @@ function delRows(array, start, end) {
 
 function reducer(state, action) {
   if (action.kind === 'LOAD') {
-    return {
-      ...state,
-      name: action.name,
-      revisionNum: action.revisionNum,
-      schema: action.schema,
+    const stateWithHistory = reducer(state, {
+      kind: 'SET_VALUES',
       values: action.values,
       nextId: action.nextId,
+    });
+    return {
+      ...stateWithHistory,
+      name: action.name,
+      editCounter: 0,
+      revisionNum: action.revisionNum,
+      schema: action.schema,
     };
   } else if (action.kind === 'SET_NAME') {
     return {
       ...state,
+      editCounter: state.editCounter + 1,
       name: action.name,
     };
   } else if (action.kind === 'SET_COMMAND') {
@@ -106,23 +111,27 @@ function reducer(state, action) {
   } else if (action.kind === 'SET_SCHEMA') {
     return {
       ...state,
+      editCounter: state.editCounter + 1,
       schema: action.schema,
       values: action.values,
       valuesHistory: [],
     };
   } else if (action.kind === 'SET_VALUES') {
     const valuesHistory = state.valuesHistory.slice();
-    const tuple = [Date.now(), state.values.slice()];
-    const prevTime = valuesHistory.length
-      ? valuesHistory[valuesHistory.length - 1][0]
-      : 0;
-    if (tuple[0] - prevTime > 500) {
-      valuesHistory.push(tuple);
-      if (valuesHistory.length > 20) valuesHistory.splice(0, 10);
+    if (state.values && state.values.length) {
+      const tuple = [Date.now(), state.values.slice()];
+      const prevTime = valuesHistory.length
+        ? valuesHistory[valuesHistory.length - 1][0]
+        : 0;
+      if (tuple[0] - prevTime > 500) {
+        valuesHistory.push(tuple);
+        if (valuesHistory.length > 20) valuesHistory.splice(0, 10);
+      }
     }
     const nextId = action.nextId ? action.nextId : state.nextId;
     return {
       ...state,
+      editCounter: state.editCounter + 1,
       values: action.values,
       valuesHistory,
       nextId,
@@ -132,6 +141,7 @@ function reducer(state, action) {
     if (past) {
       return {
         ...state,
+        editCounter: state.editCounter + 1,
         values: past[1],
         valuesHistory: state.valuesHistory,
       };
@@ -151,6 +161,7 @@ function TodoTable({ handleBack, handleName }) {
 
   const [state, dispatch] = useReducer(reducer, {
     command: '',
+    editCounter: 0,
     name: null,
     schema: null,
     values: null,
@@ -223,7 +234,7 @@ function TodoTable({ handleBack, handleName }) {
   }, [sheetId]);
 
   useEffect(() => {
-    if (sheetId && state.schema && state.values) {
+    if (sheetId && state.schema && state.values && state.editCounter) {
       let ignore = false;
       const run = async () => {
         await new Promise(resolve =>
@@ -249,9 +260,8 @@ function TodoTable({ handleBack, handleName }) {
         ignore = true;
       };
     }
-    // Use state.valuesHistory to track when local changes are entered
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleLoad, isConnected, state.name, state.valuesHistory, sheetId]);
+  }, [isConnected, state.name, state.editCounter, sheetId]);
 
   const handleFirstSave = useAsyncTask(async (title, nickname) => {
     if (!authHttp) return; // todo guest
