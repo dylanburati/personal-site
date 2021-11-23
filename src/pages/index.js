@@ -67,11 +67,14 @@ const IndexPage = () => {
   const aboutMe = (
     <>
       <p>
-        I'm a junior at Northeastern University majoring in Computer Engineering
-        and Computer Science. I've been developing side projects for 4 years,
-        and I recently completed an 8-month co-op working in education
-        technology. I'm interested in continuing with web development as well as
-        branching into data science and machine learning.
+        I'm a fourth-year Computer Engineering and Computer Science major at
+        Northeastern University. I started developing side projects the summer
+        before my freshman year, which helped me learn how to design, deploy,
+        and improve apps for the web and Android. I've also completed two
+        6-month software engineering co-ops, working with Node.js, Python, and
+        React Native. I'm interested in continuing with web development and
+        mobile app development as well as branching into data science and
+        machine learning.
       </p>
       <p>
         Outside of software, I love to ski, play piano, and take photos like the

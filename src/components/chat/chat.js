@@ -100,7 +100,7 @@ function Chat() {
           <Settings className="stroke-current" size={16} />
         </button>
       </div>
-      <GuessMachine />
+      {roomTitle.startsWith('guessr') && <GuessMachine />}
       <div className="flex-1 flex flex-col overflow-hidden">
         <ChatPanel />
         <ChatCompose send={handleSend} />
