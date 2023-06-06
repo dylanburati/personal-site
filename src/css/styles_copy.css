@@ -1,36 +1,6 @@
 @tailwind base;
 
-h1, .h1 {
-  @apply mb-6 text-4xl;
-}
-
-h2, .h2 {
-  @apply mb-2 text-2xl;
-}
-
-h3, .h3 {
-  @apply mb-2 text-xl;
-}
-
-p {
-  @apply mb-4;
-}
-
-button:focus, summary:focus {
-  outline: 0;
-}
-
 @tailwind components;
-
-.card {
-  box-shadow: 0px 5px 25px 0px rgba(0, 0, 0, 0.18);
-}
-
-@screen xl {
-  .container {
-    max-width: theme('screens.lg')
-  }
-}
 
 @tailwind utilities;
 
@@ -76,7 +46,7 @@ body {
 
 .header-image {
   filter: brightness(0.85);
-  max-height: 15rem;
+  max-height: 50vh;
 }
 
 [data-mounted] {
@@ -104,7 +74,8 @@ body {
   --color-paper-darker: var(--dark-color-paper-darker);
   --color-paper-dark: var(--dark-color-paper-dark);
   --color-green: var(--dark-color-green);
-
+}
+/* 
   :is(nav) {
     background-color: var(--color-paper);
   }
@@ -152,12 +123,11 @@ body {
   }
 
   :is(a) {
-    color: theme('colors.accent.default');
+    @apply text-accent;
   }
 
   a:hover {
-    @apply underline;
-    color: theme('colors.accent.700');
+    @apply text-accent-700 underline;
   }
 
   .anchor {
@@ -165,7 +135,7 @@ body {
   }
 
   .anchor svg {
-    stroke: currentColor;
+    @apply stroke-current;
   }
 
   :is(ol), ul {
@@ -201,4 +171,4 @@ body {
   :is(code) {
     font-size: 0.875em;
   }
-}
+} */

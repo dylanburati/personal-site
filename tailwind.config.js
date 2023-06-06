@@ -1,12 +1,16 @@
-const { colors } = require('tailwindcss/defaultTheme');
-
+/** @type {import('tailwindcss').Config} */
 module.exports = {
+  content: [
+    './src/pages/**/*.{js,jsx,ts,tsx}',
+    './src/components/**/*.{js,jsx,ts,tsx}',
+  ],
+  safelist: ["stroke-current"],
   theme: {
-    borderColor: theme => ({
+    borderColor: ({ theme }) => ({
       default: theme('colors.paper.darker', 'currentColor'),
       ...theme('colors'),
     }),
-    colors: {
+    colors: ({ colors }) => ({
       black: colors.black,
       white: colors.white,
       gray: colors.gray,
@@ -39,7 +43,7 @@ module.exports = {
         default: '#01477b',
         dark: '#092747',
       },
-    },
+    }),
     extend: {
       maxWidth: {
         '1/2': '50%',
