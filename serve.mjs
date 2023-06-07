@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import mdx from "@mdx-js/esbuild";
+import remarkGfm from "remark-gfm";
 import stylePlugin from "esbuild-style-plugin";
 import tailwindcss from "tailwindcss";
 import autoprefixer from "autoprefixer";
@@ -14,13 +15,10 @@ const ctx = await esbuild.context({
     "window.IS_DEV": "true",
   },
   plugins: [
-    mdx(),
+    mdx({ remarkPlugins: [remarkGfm] }),
     stylePlugin({
       postcss: { plugins: [tailwindcssNesting, tailwindcss, autoprefixer] },
     }),
   ],
 });
-await Promise.all([
-  ctx.watch(),
-  ctx.serve({ servedir: "dist", port: 3000 }),
-]);
+await Promise.all([ctx.watch(), ctx.serve({ servedir: "dist", port: 3000 })]);

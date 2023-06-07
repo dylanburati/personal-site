@@ -1,5 +1,6 @@
 export default {
   title: "Dylan Burati",
+  subtitle: "Software Engineer",
   description: `My personal website, built with Gatsby`,
   author: `@dylanburati`,
   externalLinks: [

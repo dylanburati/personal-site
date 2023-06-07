@@ -1,4 +1,5 @@
 import React from "react";
+import site from '../site';
 
 export type HeaderImageProps = {
   src: string;

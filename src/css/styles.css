@@ -22,7 +22,7 @@ button:focus, summary:focus {
 
 @tailwind components;
 
-.card {
+.shadow-card {
   box-shadow: 0px 5px 25px 0px rgba(0, 0, 0, 0.18);
 }
 
@@ -79,6 +79,28 @@ body {
   max-height: 15rem;
 }
 
+.timeline {
+  grid-template-columns: 100%;
+
+  .entry {
+    position: relative;
+  }
+  .entry::before {
+    content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6"%3E%3Ccircle cx="3" cy="3" r="3" fill="%23889"/%3E%3C/svg%3E');
+    position: absolute;
+    left: -4px;
+    top: 0.25rem;
+    width: 6px;
+    color: var(--color-pen-light);
+  }
+}
+
+@screen md {
+  .timeline {
+    grid-template-columns: 8ex auto
+  }
+}
+
 [data-mounted] {
   .transition-linear-150, body, nav {
     transition: background-color 150ms linear;
@@ -109,11 +131,15 @@ body {
     background-color: var(--color-paper);
   }
 
+  .nav-extension {
+    background-color: black;
+  }
+
   .header-image {
     filter: brightness(0.75) grayscale(0.1);
   }
 
-  .card {
+  .shadow-card {
     box-shadow: 0px 5px 25px 0px rgba(0, 0, 0, 0.35);
   }
 
@@ -143,9 +169,9 @@ body {
 [data-markdown] {
   @apply max-w-4xl;
 
-  :is(h1), h2, h3 {
+  /* :is(h1), h2, h3 {
     @apply mt-6;
-  }
+  } */
 
   :is(h2), h3 {
     @apply font-semibold;
@@ -200,5 +226,17 @@ body {
 
   :is(code) {
     font-size: 0.875em;
+  }
+
+  :is(table) {
+    margin-bottom: 1rem;
+  }
+
+  :is(table), th, td {
+    @apply border-paper-dark border
+  }
+
+  :is(th), td {
+    @apply py-0.5 px-1
   }
 }
