@@ -166,13 +166,15 @@ body {
   margin-bottom: 0;
 }
 
-[data-markdown] {
+[data-md-article] {
   @apply max-w-4xl;
 
-  /* :is(h1), h2, h3 {
+  :is(h1), h2, h3 {
     @apply mt-6;
-  } */
+  }
+}
 
+[data-md-snippet], [data-md-article] {
   :is(h2), h3 {
     @apply font-semibold;
   }

@@ -1,15 +1,24 @@
 import React from 'react';
 import { GitHub, Linkedin, Moon, Sun } from 'react-feather';
 import site from '../site';
+import { Link } from 'react-router-dom';
+
+export type Theme = "light" | "dark";
 
 const IconMap = {
   GitHub,
   Linkedin,
-  Moon,
-  Sun,
 };
 
-function getLinkTextOrIcon(link): React.ReactElement {
+export type IconName = keyof typeof IconMap;
+
+export type LinkObject = {
+  featherIcon?: IconName;
+  text: string;
+  href: string;
+};
+
+function getLinkTextOrIcon(link: LinkObject): React.ReactNode {
   const ThisIcon = link.featherIcon ? IconMap[link.featherIcon] : null;
   if (ThisIcon == null) {
     return link.text;
@@ -18,7 +27,7 @@ function getLinkTextOrIcon(link): React.ReactElement {
       <ThisIcon
         className="stroke-current"
         style={{ fill: 'transparent' }}
-        title={link.text}
+        aria-label={link.text}
       />
     );
   }
@@ -26,19 +35,17 @@ function getLinkTextOrIcon(link): React.ReactElement {
 
 export type HeaderProps = {
   title?: string;
-  themeIcon: string;
-  toggleTheme: () => void;
-  links: {
-    featherIcon?: string;
-    text: string;
-    href: string;
-  }[];
+  theme: Theme;
+  setTheme: (val: Theme) => void;
+  links: LinkObject[];
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, themeIcon, toggleTheme, links }) => {
+export const Header: React.FC<HeaderProps> = ({ title, theme, setTheme, links }) => {
   const pageTitle = title ? title : site.title;
   const allLinks = [...links, ...site.externalLinks];
-  const themeIconEl = getLinkTextOrIcon({ featherIcon: themeIcon });
+  const themeIconClassVisible = "text-gray-400 hover:text-white ml-4";
+  const themeIconClassHidden = "text-gray-400 hover:text-white ml-4 hidden";
+  const [moonClass, sunClass] = theme === 'light' ? [themeIconClassVisible, themeIconClassHidden] : [themeIconClassHidden, themeIconClassVisible];
 
   return (
     <nav className="py-3 px-5 bg-navy-dark">
@@ -51,21 +58,34 @@ export const Header: React.FC<HeaderProps> = ({ title, themeIcon, toggleTheme, l
         </a>
         <button
           title="Toggle Theme"
-          className="text-gray-400 hover:text-white ml-4"
-          onClick={toggleTheme}
+          className={moonClass}
+          onClick={() => setTheme('dark')}
         >
-          {themeIconEl}
+          <Moon
+            className="stroke-current"
+            style={{ fill: 'transparent' }}
+          />
+        </button>
+        <button
+          title="Toggle Theme"
+          className={sunClass}
+          onClick={() => setTheme('dark')}
+        >
+          <Sun
+            className="stroke-current"
+            style={{ fill: 'transparent' }}
+          />
         </button>
         <div className="flex-grow"></div>
         {allLinks.map(link => (
-          <a
+          <Link
             key={link.href}
             title={link.text}
             className="text-gray-400 hover:text-white ml-4"
-            href={link.href}
+            to={link.href}
           >
             {getLinkTextOrIcon(link)}
-          </a>
+          </Link>
         ))}
       </div>
     </nav>

@@ -11,7 +11,7 @@ export const SimpleCard: React.FC<
 > = ({ title, className, markdown = false, children }) => (
   <div className={className}>
     {markdown ? (
-      <div data-markdown="">
+      <div data-md-snippet="">
         <h3 className="mb-3 text-xl">{title}</h3>
         {children}
       </div>

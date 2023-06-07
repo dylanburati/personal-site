@@ -1,12 +1,19 @@
 import React from "react";
-import { createRoot } from 'react-dom/client';
-import './css/styles.css';
-import { Home } from './pages/Home';
+import { hydrateRoot } from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { routes } from "./routes";
+import "./css/styles.css";
 
 if ((window as any).IS_DEV) {
-  new EventSource('/esbuild').addEventListener('change', () => location.reload());
+  new EventSource("/esbuild").addEventListener("change", () =>
+    location.reload()
+  );
 }
-
-const el = document.getElementById('root')!;
-const root = createRoot(el);
-root.render(<Home />);
+const router = createBrowserRouter(routes);
+const el = document.getElementById("root")!;
+hydrateRoot(
+  el,
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);

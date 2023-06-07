@@ -1,14 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Header } from "./Header";
-
-export type Theme = "light" | "dark";
+import { Header, LinkObject, Theme } from "./Header";
 
 export type LayoutProps = {
-  navLinks: {
-    featherIcon?: string;
-    text: string;
-    href: string;
-  }[];
+  navLinks: LinkObject[];
   className?: string;
   hideFooter?: boolean;
 };
@@ -23,11 +17,6 @@ export const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = ({
     typeof window !== "undefined" && localStorage.theme === "dark"
       ? "dark"
       : "light"
-  );
-
-  const toggleTheme = useCallback(
-    () => setTheme((b) => (b === "dark" ? "light" : "dark")),
-    []
   );
 
   useEffect(() => {
@@ -49,8 +38,8 @@ export const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = ({
     <>
       <Header
         links={navLinks}
-        toggleTheme={toggleTheme}
-        themeIcon={theme === "dark" ? "Sun" : "Moon"}
+        theme={theme}
+        setTheme={setTheme}
       />
       <main className={className}>{children}</main>
       {!hideFooter && (
