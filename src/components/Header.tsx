@@ -1,7 +1,7 @@
-import React from 'react';
-import { GitHub, Linkedin, Moon, Sun } from 'react-feather';
-import site from '../site';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { GitHub, Linkedin, Moon, Sun } from "react-feather";
+import site from "../site";
+import { Link } from "react-router-dom";
 
 export type Theme = "light" | "dark";
 
@@ -26,7 +26,7 @@ function getLinkTextOrIcon(link: LinkObject): React.ReactNode {
     return (
       <ThisIcon
         className="stroke-current"
-        style={{ fill: 'transparent' }}
+        style={{ fill: "transparent" }}
         aria-label={link.text}
       />
     );
@@ -38,14 +38,16 @@ export type HeaderProps = {
   theme: Theme;
   setTheme: (val: Theme) => void;
   links: LinkObject[];
-}
+};
 
-export const Header: React.FC<HeaderProps> = ({ title, theme, setTheme, links }) => {
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  theme,
+  setTheme,
+  links,
+}) => {
   const pageTitle = title ? title : site.title;
   const allLinks = [...links, ...site.externalLinks];
-  const themeIconClassVisible = "text-gray-400 hover:text-white ml-4";
-  const themeIconClassHidden = "text-gray-400 hover:text-white ml-4 hidden";
-  const [moonClass, sunClass] = theme === 'light' ? [themeIconClassVisible, themeIconClassHidden] : [themeIconClassHidden, themeIconClassVisible];
 
   return (
     <nav className="py-3 px-5 bg-navy-dark">
@@ -58,26 +60,17 @@ export const Header: React.FC<HeaderProps> = ({ title, theme, setTheme, links })
         </a>
         <button
           title="Toggle Theme"
-          className={moonClass}
-          onClick={() => setTheme('dark')}
+          className="text-gray-400 hover:text-white ml-4"
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
         >
-          <Moon
-            className="stroke-current"
-            style={{ fill: 'transparent' }}
-          />
-        </button>
-        <button
-          title="Toggle Theme"
-          className={sunClass}
-          onClick={() => setTheme('dark')}
-        >
-          <Sun
-            className="stroke-current"
-            style={{ fill: 'transparent' }}
-          />
+          {theme === "light" ? (
+            <Moon className="stroke-current" style={{ fill: "transparent" }} />
+          ) : (
+            <Sun className="stroke-current" style={{ fill: "transparent" }} />
+          )}
         </button>
         <div className="flex-grow"></div>
-        {allLinks.map(link => (
+        {allLinks.map((link) => (
           <Link
             key={link.href}
             title={link.text}
@@ -90,4 +83,4 @@ export const Header: React.FC<HeaderProps> = ({ title, theme, setTheme, links })
       </div>
     </nav>
   );
-}
+};

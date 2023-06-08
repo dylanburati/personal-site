@@ -180,7 +180,7 @@ body {
   }
 
   :is(a) {
-    color: theme('colors.accent.default');
+    color: theme('colors.accent.DEFAULT');
   }
 
   a:hover {
@@ -235,7 +235,7 @@ body {
   }
 
   :is(table), th, td {
-    @apply border-paper-dark border
+    @apply border
   }
 
   :is(th), td {

@@ -4,6 +4,7 @@ import { Home } from "./pages/Home";
 import { Blog } from "./pages/Blog";
 import { BlogPost } from "./pages/BlogPost";
 import blog from "./mdx/posts";
+import { Todo } from "./pages/Todo";
 
 export const routes: RouteObject[] = [
   {
@@ -18,4 +19,8 @@ export const routes: RouteObject[] = [
     path: `/posts/${slug}`,
     element: <BlogPost postId={slug} />,
   })),
+  {
+    path: "/todo",
+    element: <Todo />,
+  },
 ];

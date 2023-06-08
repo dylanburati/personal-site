@@ -24,7 +24,7 @@ class StandardIn extends PureComponent<StandardInProps, { value: string }> {
           <textarea
             onChange={(evt) => this.setState({ value: evt.target.value })}
             className="w-full font-mono text-sm leading-tight border-2 border-paper-dark focus:border-accent-200 p-2
-              placeholder-pen-light bg-paper-default"
+              placeholder-pen-light bg-paper"
             placeholder="Paste code from DrRacket"
             spellCheck={false}
             style={{ height: "25rem" }}

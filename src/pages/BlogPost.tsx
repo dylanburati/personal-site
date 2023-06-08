@@ -24,7 +24,6 @@ export const BlogPost: React.FC<BlogPostProps> = ({ postId }) => {
     );
   }
   const Inner = post.default;
-  console.log(post.tableOfContents);
 
   return (
     <Layout className="px-5" navLinks={[{ text: "Blog", href: "/blog" }]}>

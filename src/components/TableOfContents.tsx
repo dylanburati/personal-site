@@ -4,8 +4,8 @@ import { Toc } from "@stefanprobst/rehype-extract-toc";
 function TocTree({ entries }: { entries: Toc }) {
   return (
     <ul>
-      {entries.map((entry) => (
-        <li>
+      {entries.map((entry, idx) => (
+        <li key={idx}>
           <a href={`#${entry.id}`}>{entry.value}</a>
           {entry.children && entry.children.length > 0 ? (
             <TocTree entries={entry.children} />
