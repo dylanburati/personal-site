@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Layout } from "../components/Layout";
+import { SEO } from "../components/SEO";
 import { SimpleCard } from "../components/SimpleCard";
 import { ProjectCard } from "../components/ProjectCard";
 import { ProjectLinkGroup } from "../components/ProjectLinkGroup";
@@ -11,6 +12,7 @@ export const Home = () => {
   const sortedTimeline = useMemo(() => timeline.slice().sort((a, b) => a.date < b.date ? 1 : -1), [timeline]);
   return (
     <Layout navLinks={[{ text: "Blog", href: "/blog" }]}>
+      <SEO title="Home" />
       <div className="bg-navy-dark nav-extension px-5 py-1.5">
         <div className="container mx-auto">
           <span className="font-mono text-gray-200">{site.subtitle}</span>
@@ -53,10 +55,10 @@ export const Home = () => {
           <ProjectCard
             title="This site"
             description="Portfolio, blog posts, and a small self-hosted todo list app"
-            technologies="React, TypeScript (frontend); Kothin, PostgreSQL (backend)"
+            technologies="React, TypeScript (frontend); Kotlin, PostgreSQL (backend)"
           >
             <ProjectLinkGroup category="Todo App">
-              <ProjectLink text="Login" href="/todo" />
+              <ProjectLink text="Login" href="/todo" internal={true} />
             </ProjectLinkGroup>
             <ProjectLinkGroup category="Github">
               <ProjectLink

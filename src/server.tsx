@@ -1,18 +1,19 @@
 import fs from "node:fs";
 import path from "node:path";
 import React from "react";
+import { Helmet, HelmetData } from "react-helmet";
 import { renderToString } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
 import { routes } from "./routes";
 import "./css/styles.css";
 
-function html(content: string): string {
+function html(content: string, helmet: HelmetData): string {
   return `<!DOCTYPE html>
-  <html>
+  <html ${helmet.htmlAttributes.toString()}>
     <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="/index.css" rel="stylesheet">
+      ${helmet.title.toString()}
+      ${helmet.meta.toString()}
+      ${helmet.link.toString()}
       <script type="text/javascript">
         (function() {
           try {
@@ -22,9 +23,8 @@ function html(content: string): string {
           }
         })()
       </script>
-      <script src="/index.js" defer></script>
     </head>
-    <body>
+    <body ${helmet.bodyAttributes.toString()}>
       <div id="root">${content}</div>
     </body>
   </html>`;
@@ -40,10 +40,12 @@ function html(content: string): string {
         "index.html"
       );
       const component = <StaticRouter location={route.path!}>{route.element}</StaticRouter>;
+      const appHtml = renderToString(component);
+      const helmet = Helmet.renderStatic();
       await fs.promises.mkdir(path.dirname(filename), { recursive: true });
       await fs.promises.writeFile(
         filename,
-        html(renderToString(component))
+        html(appHtml, helmet)
       );
     })
   );

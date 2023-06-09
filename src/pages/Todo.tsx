@@ -1,7 +1,7 @@
 import React, { useEffect, useContext, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/Layout";
-// import SEO from '../components/seo';
+import { SEO } from "../components/SEO";
 import { LoginTabs } from "../components/todo/LoginTabs";
 import { Bin, Dashboard } from "../components/todo/Dashboard";
 import { TodoTable } from "../components/todo/TodoTable";
@@ -72,8 +72,7 @@ const TodoApp = () => {
 export const Todo = () => {
   return (
     <Layout navLinks={[{ text: "Blog", href: "/blog" }]}>
-      {/* <SEO title="Todo" /> */}
-
+      <SEO title="Todo" />
       <UserProvider>
         <TodoApp />
       </UserProvider>

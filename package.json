@@ -7,11 +7,11 @@
   "private": true,
   "dependencies": {
     "@dylanburati/teachlangs-lint": "^1.0.0",
-    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-feather": "^2.0.10",
+    "react-helmet": "^6.1.0",
     "react-router-dom": "^6.12.0"
   },
   "devDependencies": {
@@ -19,16 +19,24 @@
     "@stefanprobst/rehype-extract-toc": "^2.2.0",
     "@types/lodash": "^4.14.195",
     "@types/react": "^18.2.8",
+    "@types/react-beautiful-dnd": "^13.1.4",
     "@types/react-dom": "^18.2.4",
+    "@types/react-helmet": "^6.1.6",
     "astring": "^1.8.6",
     "autoprefixer": "^10.4.14",
     "esbuild": "^0.17.19",
     "esbuild-style-plugin": "^1.6.2",
     "eslint": "^8.42.0",
+    "hast-util-insert": "^1.0.0",
+    "lodash": "^4.17.21",
     "postcss": "^8.4.24",
     "prettier": "^2.8.8",
+    "rehype": "^12.0.1",
+    "rehype-preset-minify": "^6.0.0",
     "rehype-slug": "^5.1.0",
     "remark-gfm": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "sharp": "^0.32.1",
     "tailwindcss": "^3.3.2",
     "typescript": "^5.1.3"
   }

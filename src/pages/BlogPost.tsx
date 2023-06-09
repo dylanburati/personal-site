@@ -1,11 +1,9 @@
 import React from "react";
 import { Layout } from "../components/Layout";
-import blog from "../mdx/posts";
+import { SEO } from "../components/SEO";
 import { TocCreator } from "../components/TableOfContents";
 import { FundiesLinter } from "../components/FundiesLinter";
-// import SEO from '../components/seo';
-// import FundiesLinterLoadable from '../components/fundiesLinter/loadable';
-// import TableOfContents from '../components/tocCreator';
+import blog from "../mdx/posts";
 
 export type BlogPostProps = {
   postId: string;
@@ -16,7 +14,7 @@ export const BlogPost: React.FC<BlogPostProps> = ({ postId }) => {
   if (post === undefined) {
     return (
       <Layout className="px-5" navLinks={[{ text: "Blog", href: "/blog" }]}>
-        {/* <SEO title="Not found" /> */}
+        <SEO title="404" />
         <div className="container mx-auto">
           <code>{postId}</code> not found
         </div>
@@ -27,7 +25,7 @@ export const BlogPost: React.FC<BlogPostProps> = ({ postId }) => {
 
   return (
     <Layout className="px-5" navLinks={[{ text: "Blog", href: "/blog" }]}>
-      {/* <SEO title={post.title} /> */}
+      <SEO title={post.title} />
       <div className="container mx-auto">
         <div className="my-8">
           <h1 className="mb-0">{post.title}</h1>

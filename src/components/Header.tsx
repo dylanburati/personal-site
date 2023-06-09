@@ -1,7 +1,7 @@
 import React from "react";
 import { GitHub, Linkedin, Moon, Sun } from "react-feather";
-import site from "../site";
 import { Link } from "react-router-dom";
+import site from "../site";
 
 export type Theme = "light" | "dark";
 
@@ -52,12 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <nav className="py-3 px-5 bg-navy-dark">
       <div className="container flex items-center mx-auto">
-        <a
+        <Link
           className="font-semibold text-xl text-gray-200 hover:text-white"
-          href="/"
+          to="/"
         >
           {pageTitle}
-        </a>
+        </Link>
         <button
           title="Toggle Theme"
           className="text-gray-400 hover:text-white ml-4"

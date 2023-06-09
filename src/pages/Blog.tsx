@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import blog from "../mdx/posts";
+import { SEO } from "../components/SEO";
 
 function getColor(n: number): string {
   return [
@@ -57,7 +58,7 @@ export const BlogListing: React.FC<BlogListingProps> = ({
   const day = date.getDate().toString();
   return (
     <div className="flex items-center mb-4">
-      <div className="flex flex-col h-full mr-3 mt-px border-paper-dark border text-center">
+      <div className="flex flex-col h-full mr-3 mt-px border text-center">
         <div className="w-12 text-sm">{month}</div>
         <div
           className="w-12 flex-grow table"
@@ -117,7 +118,7 @@ export const Blog = () => {
 
   return (
     <Layout navLinks={[]}>
-      {/* <SEO title="Blog" /> */}
+      <SEO title="Blog" />
       <section className="px-5 mt-6">
         <div className="container mx-auto">
           <h2 className="text-3xl mb-3">Recent Updates</h2>

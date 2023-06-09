@@ -9,6 +9,7 @@ export default {
       await esbuild.build({
         ...build.initialOptions,
         entryPoints: ["src/server.tsx"],
+        entryNames: undefined,
         outdir: "dist-cjs",
         platform: "node",
         format: "cjs",

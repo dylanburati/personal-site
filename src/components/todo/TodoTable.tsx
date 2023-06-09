@@ -8,7 +8,6 @@ import React, {
 import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'react-feather';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { findLastIndex, takeRightWhile, times } from 'lodash';
 import TodoRow from './TodoRow';
 import { parseCommand } from './commandParser';
 import { ChatContext } from '../chat/ChatContext';
@@ -90,6 +89,19 @@ function moveRows<T>(array: T[], srcStart: number, srcEnd: number, dstStart: num
 
 function delRows<T>(array: T[], start: number, end: number): T[] {
   return moveRows(array, start, end, -1);
+}
+
+function times<T>(n: number, iteratee: (i: number) => T): T[] {
+  return new Array(n).fill(0).map((_, i) => iteratee(i));
+}
+
+function findLastIndex<T>(array: T[], predicate: (item: T) => boolean): number {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i])) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 type ValuesTuple = [number, any[][]]
@@ -387,7 +399,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
       }
 
       const lastLine = 1 + findLastIndex(
-        state.values,
+        state.values || [],
         row => row.slice(1).some(s => s.length > 1)
       );
       const command = parseCommand(cmd, { lastLine });
