@@ -13,11 +13,21 @@ export const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = ({
   children,
   hideFooter = false,
 }) => {
-  const [theme, setTheme] = useState<Theme>(() =>
-    typeof window !== "undefined" && localStorage.theme === "dark"
-      ? "dark"
-      : "light"
-  );
+  const [theme, setTheme] = useState<Theme>("light");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.theme === "dark") {
+      setTheme("dark");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "mounted" in document.documentElement.dataset) {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme]);
+
 
   useEffect(() => {
     document.documentElement.dataset.mounted = "";
@@ -27,20 +37,9 @@ export const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.dataset.theme = theme;
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme]);
-
   return (
     <>
-      <Header
-        links={navLinks}
-        theme={theme}
-        setTheme={setTheme}
-      />
+      <Header links={navLinks} theme={theme} setTheme={setTheme} />
       <main className={className}>{children}</main>
       {!hideFooter && (
         <footer className="px-5 mt-10">

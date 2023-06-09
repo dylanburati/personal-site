@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useMemo } from "react";
+import React, { useEffect, useContext, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { SEO } from "../components/SEO";
@@ -14,12 +14,18 @@ const TodoApp = () => {
   const [queryParams, setQueryParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, userLoading, token, logout } = useContext(UserContext);
+  const [render0, setRender0] = useState(true);
+  useEffect(() => {
+    if (render0) {
+      setRender0(false);
+    }
+  }, []);
   const view = useMemo(() => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || render0) return null;
     if (!token) return "login";
     if (queryParams.get("id") || queryParams.get("new") != null) return "sheet";
     return "sheet-list";
-  }, [queryParams, token]);
+  }, [render0, queryParams, token]);
 
   useEffect(() => {
     if (!user && !userLoading) {
@@ -63,7 +69,10 @@ const TodoApp = () => {
       getMessagesArgs={GET_MESSAGES_ARGS}
     >
       <section className="px-5 mt-6">
-        <div className="container mx-auto">{mainView}</div>
+        <div className="container mx-auto">
+          {view !== "sheet" && <h2 className="mb-3">Todo App</h2>}
+          {mainView}
+        </div>
       </section>
     </ChatProvider>
   );
@@ -71,7 +80,7 @@ const TodoApp = () => {
 
 export const Todo = () => {
   return (
-    <Layout navLinks={[{ text: "Blog", href: "/blog" }]}>
+    <Layout navLinks={[{ text: "Blog", href: "/blog" }]} hideFooter>
       <SEO title="Todo" />
       <UserProvider>
         <TodoApp />

@@ -19,6 +19,7 @@ const options = {
   entryPoints: ["src/index.tsx"],
   outdir: "dist",
   bundle: true,
+  metafile: true,
   plugins: [
     ssrPlugin,
     mdx({
@@ -57,7 +58,6 @@ if (process.argv.includes("--dev")) {
   const result = await esbuild.build({
     ...options,
     entryNames: "[dir]/[name].[hash]",
-    metafile: true,
     minify: true,
     sourcemap: true,
   });

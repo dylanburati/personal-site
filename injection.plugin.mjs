@@ -4,7 +4,8 @@ import { glob } from "glob";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
-import { insert as hInsert } from "hast-util-insert";
+import isMatch from "lodash/isMatch.js";
+import { visit } from "unist-util-visit";
 
 /**
  * Plugin config
@@ -12,9 +13,6 @@ import { insert as hInsert } from "hast-util-insert";
  * @property {String} outdir - The result path for the static site
  * @property {String?} basePath - The base URL path where the contents of `outdir` will be accessed (default = "/")
  */
-
-const hAppend = (tree, selector, nodes) =>
-  hInsert(tree, selector, nodes, "append");
 
 /**
  * @type {(config: InjectionPluginConfig, metafile: import("esbuild").Metafile) => Promise<void>}
@@ -25,40 +23,45 @@ async function transformHtml({ outdir, basePath = "/" }, metafile) {
   /** @type {import('unified').Plugin<[], import('hast').Root>} */
   function rehypeInjectTagsForOutput() {
     return (tree) => {
-      hAppend(
-        tree,
-        "head",
-        Object.entries(metafile.outputs).flatMap(([key, _]) => {
-          const href = key.replace(outdir, basePath).replace(/^\/*/, "/");
-          if (key.endsWith(".js")) {
-            return [
-              {
-                type: "element",
-                tagName: "script",
-                properties: {
-                  defer: "",
-                  src: href,
-                },
-                children: [],
+      const newNodes = Object.entries(metafile.outputs).flatMap(([key, _]) => {
+        const href = key.replace(outdir, basePath).replace(/^\/*/, "/");
+        if (key.endsWith(".js")) {
+          return [
+            {
+              type: "element",
+              tagName: "script",
+              properties: {
+                defer: true,
+                src: href,
               },
-            ];
-          } else if (key.endsWith(".css")) {
-            return [
-              {
-                type: "element",
-                tagName: "link",
-                properties: {
-                  rel: "stylesheet",
-                  href,
-                },
-                children: [],
+              children: [],
+            },
+          ];
+        } else if (key.endsWith(".css")) {
+          return [
+            {
+              type: "element",
+              tagName: "link",
+              properties: {
+                rel: ["stylesheet"],
+                href,
               },
-            ];
-          } else {
-            return [];
+              children: [],
+            },
+          ];
+        } else {
+          return [];
+        }
+      });
+      visit(tree, "element", (node) => {
+        if (node.tagName === "head") {
+          for (const n of newNodes) {
+            if (!node.children.some((existing) => isMatch(existing, n))) {
+              node.children.push(n);
+            }
           }
-        })
-      );
+        }
+      });
     };
   }
 

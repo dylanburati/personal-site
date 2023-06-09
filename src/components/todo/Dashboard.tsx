@@ -62,7 +62,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div>
-      <h2 className="mb-3">Todo App</h2>
       <div className="flex items-center border-b pb-2">
         <button
           className="hover:bg-paper-darker text-accent p-1 rounded-full"
