@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - main
 
 name: Deploy to GitHub Pages
 
@@ -38,8 +38,8 @@ jobs:
         env:
           PAGES_GITHUB_TOKEN: ${{ secrets.PAGES_GITHUB_TOKEN }}
         run: |
-          MSG="gatsby-site: $(git log --no-decorate --oneline | head -n 1 | sed 's/^[0-9a-f]\+ //')"
-          npx gh-pages -d public \
+          MSG="personal-site: $(git log --no-decorate --oneline | head -n 1 | sed 's/^[0-9a-f]\+ //')"
+          npx gh-pages -d dist \
             --repo "https://${GITHUB_ACTOR}:${PAGES_GITHUB_TOKEN}@github.com/dylanburati/dylanburati.github.io.git" \
             --branch master \
             --message "$MSG"

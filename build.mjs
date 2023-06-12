@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import { rimraf } from "rimraf";
+import fse from "fs-extra";
 import esbuild from "esbuild";
 import mdx from "@mdx-js/esbuild";
 import remarkGfm from "remark-gfm";
@@ -42,7 +41,7 @@ if (process.argv.includes("--dev")) {
   });
   await Promise.all([ctx.watch(), ctx.serve({ servedir: "dist", port: 3000 })]);
 } else {
-  await rimraf("dist");
+  await fse.remove("dist");
   options.plugins.push(
     manifestPlugin({
       outdir: "dist",
@@ -54,12 +53,12 @@ if (process.argv.includes("--dev")) {
       },
     })
   );
-  rimraf
   const result = await esbuild.build({
     ...options,
     entryNames: "[dir]/[name].[hash]",
     minify: true,
     sourcemap: true,
   });
-  await fs.promises.writeFile("meta.json", JSON.stringify(result.metafile))
+  await fse.promises.writeFile("meta.json", JSON.stringify(result.metafile))
+  await fse.copy("static", "dist");
 }

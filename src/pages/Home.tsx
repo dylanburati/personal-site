@@ -62,8 +62,8 @@ export const Home = () => {
             </ProjectLinkGroup>
             <ProjectLinkGroup category="Github">
               <ProjectLink
-                text="gatsby-site"
-                href="https://github.com/dylanburati/gatsby-site"
+                text="personal-site"
+                href="https://github.com/dylanburati/personal-site"
               />
               <ProjectLink
                 text="jsonbin2"
