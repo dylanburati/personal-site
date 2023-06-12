@@ -10,6 +10,7 @@ export const useAsyncTask = asyncFn => {
   const [error, setError] = useState();
   const cancelRef = useRef(false);
   useEffect(() => {
+    cancelRef.current = false;
     return () => {
       // Cancel any async state updates that come in after unmounting
       cancelRef.current = true;
