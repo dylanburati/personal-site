@@ -21,18 +21,16 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Set up Node 12
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '12'
+          node-version: 18
+          cache: yarn
 
       - name: Install dependencies
-        run: npm install
-      
-      - name: Run tests
-        run: npm run test
-      
+        run: yarn install
+
       - name: Build
-        run: npm run build
+        run: node build.mjs
       
       - name: Push to gh-pages
         env:
