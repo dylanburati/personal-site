@@ -19,40 +19,49 @@ import { visit } from "unist-util-visit";
  */
 async function transformHtml({ outdir, basePath = "/" }, metafile) {
   const filenames = glob.sync(path.join(outdir, "**/*.html"));
+  let globAttempt = 0;
+  while (filenames.length === 0 && globAttempt < 5) {
+    globAttempt += 1;
+    await new Promise(resolve => setTimeout(resolve, 100));
+    filenames.push(...glob.sync(path.join(outdir, "**/*.html")));
+  }
+  if (filenames.length === 0) {
+    throw new Error("No files to transform");
+  }
+  const newNodes = Object.entries(metafile.outputs).flatMap(([key, _]) => {
+    const href = key.replace(outdir, basePath).replace(/^\/*/, "/");
+    if (key.endsWith(".js")) {
+      return [
+        {
+          type: "element",
+          tagName: "script",
+          properties: {
+            defer: true,
+            src: href,
+          },
+          children: [],
+        },
+      ];
+    } else if (key.endsWith(".css")) {
+      return [
+        {
+          type: "element",
+          tagName: "link",
+          properties: {
+            rel: ["stylesheet"],
+            href,
+          },
+          children: [],
+        },
+      ];
+    } else {
+      return [];
+    }
+  });
 
   /** @type {import('unified').Plugin<[], import('hast').Root>} */
   function rehypeInjectTagsForOutput() {
     return (tree) => {
-      const newNodes = Object.entries(metafile.outputs).flatMap(([key, _]) => {
-        const href = key.replace(outdir, basePath).replace(/^\/*/, "/");
-        if (key.endsWith(".js")) {
-          return [
-            {
-              type: "element",
-              tagName: "script",
-              properties: {
-                defer: true,
-                src: href,
-              },
-              children: [],
-            },
-          ];
-        } else if (key.endsWith(".css")) {
-          return [
-            {
-              type: "element",
-              tagName: "link",
-              properties: {
-                rel: ["stylesheet"],
-                href,
-              },
-              children: [],
-            },
-          ];
-        } else {
-          return [];
-        }
-      });
       visit(tree, "element", (node) => {
         if (node.tagName === "head") {
           for (const n of newNodes) {

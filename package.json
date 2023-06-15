@@ -5,6 +5,9 @@
   "author": "Dylan Burati",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "test": "jest --config jest.config.js"
+  },
   "dependencies": {
     "@dylanburati/teachlangs-lint": "^1.0.0",
     "react": "^18.2.0",

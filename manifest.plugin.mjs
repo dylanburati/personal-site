@@ -5,7 +5,19 @@ import glob from "glob";
 import lodash from "lodash";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
-import rehypePresetMinify from "rehype-preset-minify";
+import rehypeMinifyAttributeWhitespace from 'rehype-minify-attribute-whitespace'
+import rehypeMinifyCssStyle from 'rehype-minify-css-style'
+import rehypeRemoveMetaHttpEquiv from 'rehype-remove-meta-http-equiv'
+import rehypeMinifyEnumeratedAttribute from 'rehype-minify-enumerated-attribute'
+import rehypeMinifyEventHandler from 'rehype-minify-event-handler'
+import rehypeMinifyJavaScriptScript from 'rehype-minify-javascript-script'
+import rehypeMinifyJavaScriptUrl from 'rehype-minify-javascript-url'
+import rehypeMinifyJsonScript from 'rehype-minify-json-script'
+import rehypeMinifyLanguage from 'rehype-minify-language'
+import rehypeMinifyMediaAttribute from 'rehype-minify-media-attribute'
+import rehypeMinifyMetaColor from 'rehype-minify-meta-color'
+import rehypeMinifyMetaContent from 'rehype-minify-meta-content'
+import rehypeMinifyStyleAttribute from 'rehype-minify-style-attribute'
 import rehypeStringify from "rehype-stringify";
 import sharp from "sharp";
 import { insert as hInsert } from "hast-util-insert";
@@ -87,6 +99,24 @@ const defaultIcons = [
 
 const hashPrimitive = (input) =>
   crypto.createHash(`md5`).update(input).digest(`hex`);
+
+const minifyPlugins = [
+  rehypeMinifyAttributeWhitespace,
+  rehypeMinifyCssStyle,
+  // Do `remove-meta-http-equiv` before `enumerated-attribute`, because the
+  // latter might minify things further.
+  rehypeRemoveMetaHttpEquiv,
+  rehypeMinifyEnumeratedAttribute,
+  rehypeMinifyEventHandler,
+  rehypeMinifyJavaScriptScript,
+  rehypeMinifyJavaScriptUrl,
+  rehypeMinifyJsonScript,
+  rehypeMinifyLanguage,
+  rehypeMinifyMediaAttribute,
+  rehypeMinifyMetaColor,
+  rehypeMinifyMetaContent,
+  rehypeMinifyStyleAttribute,
+]
 
 /**
  * Plugin config
@@ -221,7 +251,7 @@ async function transformHtml({ outdir, favicons, basePath = "/" }, manifest) {
   const processor = unified()
     .use(rehypeParse)
     .use(rehypeInsertLinks)
-    .use(rehypePresetMinify)
+    .use(minifyPlugins)
     .use(rehypeStringify);
   return await Promise.all(
     filenames.map(async (path) => {
