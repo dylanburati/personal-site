@@ -1,6 +1,6 @@
 My personal website, hosted at
 [dylanburati.github.io](https://dylanburati.github.io)
 
-- based on [`gatsby-starter-default`](https://github.com/gatsbyjs/gatsby-starter-default)
+- React + static server-side rendering
 - styles: [TailwindCSS](https://tailwindcss.com)
 - icons: [Feather Icons](https://github.com/feathericons/react-feather)

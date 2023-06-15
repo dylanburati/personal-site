@@ -107,13 +107,18 @@ export function char(c: string): Parser<string, string> {
   };
 }
 
+type Predicate<I> = (input: I) => boolean;
+type CharPredicate = Predicate<string>;
+
 /**
  * Recognizes one character and checks that it satisfies a predicate.
  */
-export function satisfy(test: (c: string) => boolean): Parser<string, string> {
+export function satisfy(test: RegExp | CharPredicate): Parser<string, string> {
+  const testFn =
+    typeof test === "function" ? test : (c: string) => test.test(c);
   return {
     parse(input) {
-      if (input.length === 0 || !test(input[0])) {
+      if (input.length === 0 || !testFn(input[0])) {
         return [input, new Err("satisfy")];
       }
       return [input.slice(1), new Ok(input[0])];
@@ -137,13 +142,15 @@ export function tag(s: string): Parser<string, string> {
 
 function takeWhileM(
   min: number,
-  test: (c: string) => boolean
+  test: RegExp | CharPredicate
 ): Parser<string, string> {
+  const testFn =
+    typeof test === "function" ? test : (c: string) => test.test(c);
   return {
     parse(input) {
       let end = 0;
       for (; end < input.length; end++) {
-        if (!test(input[end])) {
+        if (!testFn(input[end])) {
           break;
         }
       }
@@ -162,7 +169,7 @@ function takeWhileM(
  * This parser does not fail.
  */
 export function takeWhile(
-  test: (c: string) => boolean
+  test: RegExp | CharPredicate
 ): Parser<string, string> {
   return takeWhileM(0, test);
 }
@@ -174,7 +181,7 @@ export function takeWhile(
  * This parser does not fail.
  */
 export function takeWhile1(
-  test: (c: string) => boolean
+  test: RegExp | CharPredicate
 ): Parser<string, string> {
   return takeWhileM(0, test);
 }

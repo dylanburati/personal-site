@@ -19,6 +19,7 @@ export default {
         plugins: (build.initialOptions.plugins || []).filter(
           (e) => e.name !== "ssr"
         ),
+        logLevel: "warning",
       });
       await import('./dist-cjs/server.js');
     });

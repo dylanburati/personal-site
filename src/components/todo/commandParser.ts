@@ -63,33 +63,39 @@ const shareParser: Parser<string, ParsedCommand> = map(
     arg,
   })
 );
-const intParser = alt(
-  char("0"),
-  add(satisfy(/[1-9]/.test), takeWhile(/[0-9]/.test))
-);
+const intParser = alt(char("0"), add(satisfy(/[1-9]/), takeWhile(/[0-9]/)));
 const addrParser: Parser<string, Addr> = alt(
+  map(char("."), (): Addr => ({ kind: "relative", value: 0 })),
   map(char("^"), (): Addr => ({ kind: "start" })),
   map(char("$"), () => ({ kind: "end" })),
   map(intParser, (s) => ({ kind: "absolute", value: parseInt(s, 10) })),
-  map(add(satisfy("+-".includes), intParser), (s) => ({
+  map(add(satisfy(/[+-]/), intParser), (s) => ({
     kind: "relative",
     value: parseInt(s, 10),
   }))
 );
-const rangeParser: Parser<string, [Addr, Addr]> = map(
+const addrOrHereParser = optional(addrParser, { kind: 'relative', value: 0 })
+const longhandRangeParser: Parser<string, [Addr, Addr]> = map(
   consecutive(addrParser, optional(preceded(char(","), addrParser), null)),
   ([start, maybeEnd]) =>
     maybeEnd !== null ? [start, maybeEnd] : [start, start]
 );
-const rangeOrHereParser = optional(rangeParser, [
-  { kind: "relative", value: 0 },
-  { kind: "relative", value: 0 },
+const shorthandRangeParser = map(char("%"), (): [Addr, Addr] => [
+  { kind: "start" },
+  { kind: "end" },
 ]);
+const rangeOrHereParser = optional(
+  alt(shorthandRangeParser, longhandRangeParser),
+  [
+    { kind: "relative", value: 0 },
+    { kind: "relative", value: 0 },
+  ]
+);
 const insertParser: Parser<string, ParsedCommand> = map(
-  consecutive(rangeOrHereParser, preceded(char("i"), optional(intParser, "1"))),
-  ([range, argStr]) => ({
+  consecutive(addrOrHereParser, preceded(char("i"), optional(intParser, "1"))),
+  ([start, argStr]) => ({
     command: "i",
-    range,
+    range: [start, start],
     arg: parseInt(argStr, 10),
   })
 );
@@ -168,8 +174,8 @@ export function parseCommand(
       return parsed;
     default:
       const [startAddr, endAddr] = parsed.range;
-      const start = tryResolveLine(startAddr, context);
-      if (start === undefined) {
+      const istart = tryResolveLine(startAddr, context);
+      if (istart === undefined) {
         return {
           command: false,
           reason: `Start address not found: ${
@@ -177,8 +183,8 @@ export function parseCommand(
           } line not provided`,
         };
       }
-      const end = tryResolveLine(endAddr, context);
-      if (end === undefined) {
+      const iend = tryResolveLine(endAddr, context);
+      if (iend === undefined) {
         return {
           command: false,
           reason: `End address not found: ${
@@ -186,12 +192,7 @@ export function parseCommand(
           } line not provided`,
         };
       }
-      if (start > end) {
-        return {
-          command: false,
-          reason: "Backwards range",
-        };
-      }
+      const [start, end] = istart > iend ? [iend, istart] : [istart, iend];
       if (
         start < 0 ||
         (context.lastLine !== undefined && end > context.lastLine)

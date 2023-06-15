@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { glob } from "glob";
+import glob from "glob";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
@@ -18,7 +18,7 @@ import { visit } from "unist-util-visit";
  * @type {(config: InjectionPluginConfig, metafile: import("esbuild").Metafile) => Promise<void>}
  */
 async function transformHtml({ outdir, basePath = "/" }, metafile) {
-  const filenames = await glob(path.join(outdir, "**/*.html"));
+  const filenames = glob.sync(path.join(outdir, "**/*.html"));
 
   /** @type {import('unified').Plugin<[], import('hast').Root>} */
   function rehypeInjectTagsForOutput() {

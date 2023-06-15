@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { glob } from "glob";
+import glob from "glob";
 import lodash from "lodash";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
@@ -168,7 +168,7 @@ async function transformHtml({ outdir, favicons, basePath = "/" }, manifest) {
     ...icon,
     src: `${basePath}${icon.src}?v=${manifest.cacheDigest}`,
   }));
-  const filenames = await glob(path.join(outdir, "**/*.html"));
+  const filenames = glob.sync(path.join(outdir, "**/*.html"));
 
   /** @type {import('unified').Plugin<[], import('hast').Root>} */
   function rehypeInsertLinks() {
