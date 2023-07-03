@@ -1,5 +1,5 @@
 import {
-  ERR,
+  Result,
   Parser,
   add,
   alt,
@@ -156,7 +156,7 @@ export function parseCommand(
   if (remaining.length > 0) {
     return { command: false, reason: "Trailing characters: " + remaining };
   }
-  if (res.kind === ERR) {
+  if (res.kind === Result.ERR) {
     return { command: false, reason: "Parse error: " + res.getError() };
   }
   const parsed = res.unwrap();

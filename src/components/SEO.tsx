@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import Helmet from "react-helmet";
 import site from "../site";
 
@@ -8,11 +7,13 @@ export type SEOProps = {
   lang?: string;
   description?: string;
   meta?: JSX.IntrinsicElements["meta"][];
+  link?: JSX.IntrinsicElements["link"][];
 };
 
 export const SEO: React.FC<SEOProps> = ({
   lang = "en",
   meta = [],
+  link = [],
   title,
   description,
 }) => {
@@ -39,6 +40,7 @@ export const SEO: React.FC<SEOProps> = ({
         },
         ...meta,
       ]}
+      link={link}
     />
   );
 };

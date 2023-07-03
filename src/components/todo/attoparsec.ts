@@ -1,79 +1,93 @@
-export const OK = Symbol("OK");
-export const ERR = Symbol("ERR");
+export namespace Result {
+  export const OK = Symbol("OK");
+  export const ERR = Symbol("ERR");
 
-export type ResultKind = typeof OK | typeof ERR;
+  export type Kind = typeof OK | typeof ERR;
 
-export interface Result<T> {
-  kind: ResultKind;
-  map<R>(f: (a: T) => R): Result<R>;
-  tryMap<R>(f: (a: T) => Result<R>): Result<R>;
-  validate(msg: string, f: (a: T) => boolean): Result<T>;
-  unwrap(): T;
-  getError(): string;
-}
-
-class Ok<T> {
-  kind: typeof OK;
-  val: T;
-
-  constructor(val: T) {
-    this.kind = OK;
-    this.val = val;
+  type ResultContainer<T> =
+    | {
+        kind: typeof OK;
+        val: T;
+      }
+    | {
+        kind: typeof ERR;
+        msg: string;
+      };
+  interface ResultMethods<T> {
+    map<R>(f: (a: T) => R): Result<R>;
+    tryMap<R>(f: (a: T) => Result<R>): Result<R>;
+    validate(msg: string, f: (a: T) => boolean): Result<T>;
+    unwrap(): T;
+    getError(): string;
   }
 
-  map<R>(f: (a: T) => R): Ok<R> {
-    return new Ok(f(this.val));
-  }
+  export type Result<T> = ResultContainer<T> & ResultMethods<T>;
 
-  tryMap<R>(f: (a: T) => Result<R>): Result<R> {
-    return f(this.val);
-  }
+  export class Ok<T> {
+    kind: typeof OK;
+    val: T;
 
-  validate(msg: string, f: (a: T) => boolean): Result<T> {
-    if (!f(this.val)) {
-      return new Err(msg);
+    constructor(val: T) {
+      this.kind = OK;
+      this.val = val;
     }
-    return this;
+
+    map<R>(f: (a: T) => R): Ok<R> {
+      return new Result.Ok(f(this.val));
+    }
+
+    tryMap<R>(f: (a: T) => Result<R>): Result<R> {
+      return f(this.val);
+    }
+
+    validate(msg: string, f: (a: T) => boolean): Result<T> {
+      if (!f(this.val)) {
+        return new Err(msg);
+      }
+      return this;
+    }
+
+    unwrap(): T {
+      return this.val;
+    }
+
+    getError(): never {
+      throw new Error("Ok.getError()");
+    }
   }
 
-  unwrap(): T {
-    return this.val;
-  }
+  export class Err {
+    kind: typeof ERR;
+    msg: string;
 
-  getError(): never {
-    throw new Error("Ok.getError()");
+    constructor(msg: string) {
+      this.kind = ERR;
+      this.msg = msg;
+    }
+
+    map<R>(f: (a: any) => R): Err {
+      return this;
+    }
+
+    tryMap<R>(f: (a: any) => Result<R>): Err {
+      return this;
+    }
+
+    validate(msg: string, f: (a: any) => boolean): Err {
+      return this;
+    }
+
+    unwrap(): never {
+      throw new Error(this.msg);
+    }
+
+    getError(): string {
+      return this.msg;
+    }
   }
 }
 
-class Err {
-  kind: typeof ERR;
-  msg: string;
-
-  constructor(msg: string) {
-    this.kind = ERR;
-    this.msg = msg;
-  }
-
-  map<R>(f: (a: any) => R): Err {
-    return this;
-  }
-
-  tryMap<R>(f: (a: any) => Result<R>): Err {
-    return this;
-  }
-
-  validate(msg: string, f: (a: any) => boolean): Err {
-    return this;
-  }
-
-  unwrap(): never {
-    throw new Error(this.msg);
-  }
-
-  getError(): string {
-    return this.msg;
-  }
-}
+export type Result<T> = Result.Result<T>;
 
 export interface Parser<I, T> {
   parse(input: I): [I, Result<T>];
@@ -86,9 +100,9 @@ export function anyChar(): Parser<string, string> {
   return {
     parse(input) {
       if (input.length === 0) {
-        return [input, new Err("anyChar")];
+        return [input, new Result.Err("anyChar")];
       }
-      return [input.slice(1), new Ok(input[0])];
+      return [input.slice(1), new Result.Ok(input[0])];
     },
   };
 }
@@ -100,9 +114,9 @@ export function char(c: string): Parser<string, string> {
   return {
     parse(input) {
       if (input.length === 0 || input[0] !== c) {
-        return [input, new Err("char")];
+        return [input, new Result.Err("char")];
       }
-      return [input.slice(1), new Ok(input[0])];
+      return [input.slice(1), new Result.Ok(input[0])];
     },
   };
 }
@@ -119,9 +133,9 @@ export function satisfy(test: RegExp | CharPredicate): Parser<string, string> {
   return {
     parse(input) {
       if (input.length === 0 || !testFn(input[0])) {
-        return [input, new Err("satisfy")];
+        return [input, new Result.Err("satisfy")];
       }
-      return [input.slice(1), new Ok(input[0])];
+      return [input.slice(1), new Result.Ok(input[0])];
     },
   };
 }
@@ -133,9 +147,9 @@ export function tag(s: string): Parser<string, string> {
   return {
     parse(input) {
       if (!input.startsWith(s)) {
-        return [input, new Err("tag")];
+        return [input, new Result.Err("tag")];
       }
-      return [input.slice(s.length), new Ok(s)];
+      return [input.slice(s.length), new Result.Ok(s)];
     },
   };
 }
@@ -155,9 +169,9 @@ function takeWhileM(
         }
       }
       if (end < min) {
-        return [input, new Err("takeWhileM")];
+        return [input, new Result.Err("takeWhileM")];
       }
-      return [input.slice(end), new Ok(input.slice(0, end))];
+      return [input.slice(end), new Result.Ok(input.slice(0, end))];
     },
   };
 }
@@ -201,9 +215,9 @@ function takeTillM(
         end = m != null ? m.index : input.length;
       }
       if (end < min) {
-        return [input, new Err("takeTillM")];
+        return [input, new Result.Err("takeTillM")];
       }
-      return [input.slice(end), new Ok(input.slice(0, end))];
+      return [input.slice(end), new Result.Ok(input.slice(0, end))];
     },
   };
 }
@@ -239,16 +253,16 @@ function manyMN<I, R>(
       const result: R[] = [];
       while (result.length < max) {
         let [next, item] = parser.parse(current);
-        if (item.kind === OK) {
-          result.push(item.unwrap());
+        if (item.kind === Result.OK) {
+          result.push(item.val);
           current = next;
         } else if (result.length < min) {
-          return [input, new Err("manyMN " + item.getError())];
+          return [input, new Result.Err("manyMN " + item.msg)];
         } else {
-          return [current, new Ok(result)];
+          return [current, new Result.Ok(result)];
         }
       }
-      return [current, new Ok(result)];
+      return [current, new Result.Ok(result)];
     },
   };
 }
@@ -292,14 +306,14 @@ function foldManyM<I, T, R>(
       let count = 0;
       while (true) {
         let [next, item] = parser.parse(current);
-        if (item.kind === OK) {
-          result = reducer(result, item.unwrap());
+        if (item.kind === Result.OK) {
+          result = reducer(result, item.val);
           current = next;
           count += 1;
         } else if (count < min) {
-          return [input, new Err("foldManyM " + item.getError())];
+          return [input, new Result.Err("foldManyM " + item.msg)];
         } else {
-          return [current, new Ok(result)];
+          return [current, new Result.Ok(result)];
         }
       }
     },
@@ -335,15 +349,15 @@ export function foldMany1<I, T, R>(
  */
 export function allConsuming<I extends string | any[], R>(
   parser: Parser<I, R>
-) {
+): Parser<I, R> {
   return {
     parse(input: I) {
       const [nxt, res] = parser.parse(input);
-      if (res.kind === ERR) {
+      if (res.kind === Result.ERR) {
         return [input, res];
       }
       if (nxt.length > 0) {
-        return [input, new Err("allConsuming")];
+        return [input, new Result.Err("allConsuming")];
       }
       return [nxt, res];
     },
@@ -351,23 +365,49 @@ export function allConsuming<I extends string | any[], R>(
 }
 
 /**
- * Applies two parsers in sequence, and returns their results as a pair.
+ * Applies a number of parsers in sequence, and returns their results as a tuple.
  */
-export function consecutive<I, R1, R2>(
-  parser1: Parser<I, R1>,
-  parser2: Parser<I, R2>
-): Parser<I, [R1, R2]> {
+export function consecutive<I, A, B>(
+  parser1: Parser<I, A>,
+  parser2: Parser<I, B>
+): Parser<I, [A, B]>;
+export function consecutive<I, A, B, C>(
+  parser1: Parser<I, A>,
+  parser2: Parser<I, B>,
+  parser3: Parser<I, C>
+): Parser<I, [A, B, C]>;
+export function consecutive<I, A, B, C, D>(
+  parser1: Parser<I, A>,
+  parser2: Parser<I, B>,
+  parser3: Parser<I, C>,
+  parser4: Parser<I, D>
+): Parser<I, [A, B, C, D]>;
+export function consecutive<I, A, B, C, D, E>(
+  parser1: Parser<I, A>,
+  parser2: Parser<I, B>,
+  parser3: Parser<I, C>,
+  parser4: Parser<I, D>,
+  parser5: Parser<I, E>
+): Parser<I, [A, B, C, D, E]>;
+export function consecutive<I, A>(
+  parser1: Parser<I, A>,
+  ...moreParsers: Parser<I, any>[]
+): Parser<I, any> {
   return {
     parse(input) {
-      const [nxt1, res1] = parser1.parse(input);
-      if (res1.kind === ERR) {
-        return [input, res1 as Result<[R1, R2]>];
+      let [nxt, res] = parser1.parse(input);
+      if (res.kind === Result.ERR) {
+        return [input, res];
       }
-      const [nxt2, res2] = parser2.parse(nxt1);
-      if (res2.kind === ERR) {
-        return [input, res2 as Result<[R1, R2]>];
+      const tuple = [res.val];
+      for (let i = 0; i < moreParsers.length; i++) {
+        [nxt, res] = moreParsers[i].parse(nxt);
+        if (res.kind === Result.ERR) {
+          return [input, res];
+        }
+        tuple.push(res.val);
       }
-      return [nxt2, new Ok([res1.unwrap(), res2.unwrap()])];
+      return [nxt, new Result.Ok(tuple)];
     },
   };
 }
@@ -382,14 +422,14 @@ export function add<I>(
   return {
     parse(input) {
       const [nxt1, res1] = parser1.parse(input);
-      if (res1.kind === ERR) {
+      if (res1.kind === Result.ERR) {
         return [input, res1];
       }
       const [nxt2, res2] = parser2.parse(nxt1);
-      if (res2.kind === ERR) {
+      if (res2.kind === Result.ERR) {
         return [input, res2];
       }
-      return [nxt2, new Ok(res1.unwrap() + res2.unwrap())];
+      return [nxt2, new Result.Ok(res1.val + res2.val)];
     },
   };
 }
@@ -404,11 +444,11 @@ export function preceded<I, R>(
   return {
     parse(input) {
       const [nxt1, res1] = parser1.parse(input);
-      if (res1.kind === ERR) {
-        return [input, res1 as Result<R>];
+      if (res1.kind === Result.ERR) {
+        return [input, res1];
       }
       const [nxt2, res2] = parser2.parse(nxt1);
-      if (res2.kind === ERR) {
+      if (res2.kind === Result.ERR) {
         return [input, res2];
       }
       return [nxt2, res2];
@@ -426,14 +466,42 @@ export function terminated<I, R>(
   return {
     parse(input) {
       const [nxt1, res1] = parser1.parse(input);
-      if (res1.kind === ERR) {
+      if (res1.kind === Result.ERR) {
         return [input, res1];
       }
       const [nxt2, res2] = parser2.parse(nxt1);
-      if (res2.kind === ERR) {
-        return [input, res2 as Result<R>];
+      if (res2.kind === Result.ERR) {
+        return [input, res2];
       }
       return [nxt2, res1];
+    },
+  };
+}
+
+/**
+ * Matches an object from the first parser and discards it, then gets an object from the second parser,
+ * and finally matches an object from the third parser and discards it.
+ */
+export function delimited<I, R>(
+  parser1: Parser<I, any>,
+  parser2: Parser<I, R>,
+  parser3: Parser<I, any>
+): Parser<I, R> {
+  return {
+    parse(input) {
+      const [nxt1, res1] = parser1.parse(input);
+      if (res1.kind === Result.ERR) {
+        return [input, res1];
+      }
+      const [nxt2, res2] = parser2.parse(nxt1);
+      if (res2.kind === Result.ERR) {
+        return [input, res2];
+      }
+      const [nxt3, res3] = parser3.parse(nxt2);
+      if (res3.kind === Result.ERR) {
+        return [input, res3];
+      }
+      return [nxt3, res2];
     },
   };
 }
@@ -445,12 +513,12 @@ export function alt<I, R>(...parsers: Parser<I, R>[]): Parser<I, R> {
   return {
     parse(input) {
       let [nxt, res] = parsers[0].parse(input);
-      if (res.kind === OK) {
+      if (res.kind === Result.OK) {
         return [nxt, res];
       }
       for (let i = 1; i < parsers.length; i++) {
         [nxt, res] = parsers[i].parse(input);
-        if (res.kind === OK) {
+        if (res.kind === Result.OK) {
           return [nxt, res];
         }
       }
@@ -467,10 +535,10 @@ export function optional<I, R>(parser: Parser<I, R>, dfault: R): Parser<I, R> {
   return {
     parse(input) {
       const [nxt, res] = parser.parse(input);
-      if (res.kind === OK) {
+      if (res.kind === Result.OK) {
         return [nxt, res];
       }
-      return [input, new Ok(dfault)];
+      return [input, new Result.Ok(dfault)];
     },
   };
 }

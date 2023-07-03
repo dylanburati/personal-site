@@ -57,7 +57,7 @@ const TodoApp = () => {
     const handleClose = () => {
       navigate("/todo");
     };
-    const handleName = (id) => {
+    const handleName = (id: string) => {
       setQueryParams(new URLSearchParams({ id }));
     };
     mainView = <TodoTable handleBack={handleClose} handleName={handleName} />;

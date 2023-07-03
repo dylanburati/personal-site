@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { UserContext } from './UserContext';
-import WSClient from '../../services/wsClient';
-import { useAsyncTask } from '../../hooks/useAsyncTask';
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { UserContext } from "./UserContext";
+import WSClient from "../../services/wsClient";
+import { useAsyncTask } from "../../hooks/useAsyncTask";
+
+export type RoomUserMap = {
+  [userId: string]: {
+    nickname: string;
+  };
+};
 
 export type ChatContextType = {
   roomId: string | null;
   roomTitle: string | null;
-  roomUsers: {
-    [id: string]: {
-      id: string;
-      nickname: string;
-    }
-  }
+  roomUsers: RoomUserMap;
   nickname: string | null;
   isLoading: boolean;
   isConnected: boolean;
@@ -20,7 +21,7 @@ export type ChatContextType = {
   sendMessage: (message: any) => void;
   messages: any[];
   errors: any[];
-}
+};
 
 export const ChatContext = React.createContext<ChatContextType>({
   roomId: null,
@@ -36,21 +37,33 @@ export const ChatContext = React.createContext<ChatContextType>({
   errors: [],
 });
 
-const wsUrl = 'wss://datagame.live/ws';
-export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
+type SetNicknameData = {
+  userId: string;
+  nickname: string;
+};
+
+export type ChatProviderProps = {
+  roomId: string | null;
+  getMessagesArgs: object;
+};
+
+const wsUrl = "wss://datagame.live/ws";
+export const ChatProvider: React.FC<
+  React.PropsWithChildren<ChatProviderProps>
+> = ({ children, roomId, getMessagesArgs = {} }) => {
   const { token, user } = useContext(UserContext);
-  const [roomTitle, setRoomTitle] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [roomUsers, setRoomUsers] = useState({});
+  const [roomTitle, setRoomTitle] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [roomUsers, setRoomUsers] = useState<RoomUserMap>({});
   const [isFirstLogin, setFirstLogin] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [errors, setErrors] = useState<any[]>([]);
 
-  const mergeMessages = useCallback(toAdd => {
-    setMessages(messages => {
+  const mergeMessages = useCallback((toAdd: any[]) => {
+    setMessages((messages) => {
       const ids = new Map(messages.map((m, i) => [m.id, i]));
       const next = [...messages];
-      toAdd.forEach(m => {
+      toAdd.forEach((m) => {
         const replaceIdx = ids.get(m.id);
         if (replaceIdx === undefined) {
           next.push(m);
@@ -65,10 +78,10 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   const [wsClient, setWsClient] = useState<WSClient>();
   const connect = useAsyncTask(
     useCallback(
-      async client => {
+      async (client: WSClient) => {
         try {
           const msg = await client.sendAndListen({
-            action: 'login',
+            action: "login",
             data: { token },
           });
           setWsClient(client);
@@ -76,13 +89,14 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
           setNickname(msg.nickname);
           setFirstLogin(msg.isFirstLogin);
           client.send({
-            action: 'getMessages',
+            action: "getMessages",
             data: getMessagesArgs,
           });
-        } catch (err) {
+        } catch (e) {
+          const err = e as any;
           console.error(err.message);
           if (err.originalMessage) {
-            setErrors(prev => [...prev, err.originalMessage]);
+            setErrors((prev) => [...prev, err.originalMessage]);
           }
         }
       },
@@ -92,10 +106,10 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   useEffect(() => {
     if (roomId && user && token) {
       const nextClient = new WSClient(`${wsUrl}/${roomId}`, connect.run);
-      const lk = nextClient.addListener(message => {
-        if (message.type === 'message') {
+      const lk = nextClient.addListener((message) => {
+        if (message.type === "message") {
           mergeMessages([message.data]);
-        } else if (message.type === 'getMessages') {
+        } else if (message.type === "getMessages") {
           mergeMessages(message.data);
         }
       });
@@ -104,7 +118,9 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
       return () => {
         nextClient.disconnect();
         nextClient.removeListener(lk);
-        setWsClient(current => (current === nextClient ? undefined : current));
+        setWsClient((current) =>
+          current === nextClient ? undefined : current
+        );
         setErrors([]);
         setMessages([]);
       };
@@ -115,16 +131,16 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
     if (wsClient) wsClient.setConnector(connect.run);
   }, [connect.run, wsClient]);
 
-  const sendMessage = m => {
+  const sendMessage = (m: any) => {
     if (wsClient) wsClient.send(m);
   };
 
   useEffect(() => {
     if (!wsClient) return;
 
-    const lk = wsClient.addListener(message => {
-      if (message.type === 'error') {
-        setErrors(prev => [...prev, message]);
+    const lk = wsClient.addListener((message) => {
+      if (message.type === "error") {
+        setErrors((prev) => [...prev, message]);
       }
     });
 
@@ -135,21 +151,21 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
   useEffect(() => {
     if (!wsClient || !user) return;
 
-    const lk = wsClient.addListener(message => {
-      if (message.type === 'setNickname') {
-        const { userId, nickname } = message.data;
+    const lk = wsClient.addListener((message) => {
+      if (message.type === "setNickname") {
+        const { userId, nickname } = message.data as SetNicknameData;
         if (userId === user.id) {
           setNickname(nickname);
         }
-        setRoomUsers(state => ({
+        setRoomUsers((state) => ({
           ...state,
           [userId]: {
             ...state[userId],
             nickname,
           },
         }));
-        setMessages(messages =>
-          messages.map(m => {
+        setMessages((messages) =>
+          messages.map((m) => {
             const mc = { ...m };
             if (mc.sender.userId === userId) mc.sender.nickname = nickname;
             return mc;
@@ -183,4 +199,4 @@ export function ChatProvider({ children, roomId, getMessagesArgs = {} }) {
       {children}
     </ChatContext.Provider>
   );
-}
+};

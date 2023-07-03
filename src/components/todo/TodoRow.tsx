@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { HTMLInputTypeAttribute } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 
-class TodoRow extends React.Component {
-  shouldComponentUpdate(nextProps, nextState) {
+export type TodoRowProps = {
+  id: string;
+  index: number;
+  columns: {
+    label: string;
+    type?: HTMLInputTypeAttribute;
+  }[];
+  numWidth: number;
+  values: any[];
+  handleChange: (colIndex: number, val: any) => void;
+}
+
+export class TodoRow extends React.Component<TodoRowProps> {
+  shouldComponentUpdate(nextProps: TodoRowProps, nextState: {}) {
     return (
       nextProps.id !== this.props.id ||
       nextProps.index !== this.props.index ||
@@ -20,7 +32,7 @@ class TodoRow extends React.Component {
             className="flex items-stretch shadow-md-dark mb-2 bg-paper transition-linear-150"
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            tabIndex="-1"
+            tabIndex={-1}
             ref={provided.innerRef}
           >
             <span

@@ -1,4 +1,5 @@
 import React, { PureComponent } from "react";
+// @ts-expect-error
 import { lint } from "@dylanburati/teachlangs-lint";
 
 type StandardInProps = {
@@ -46,11 +47,13 @@ export type FundiesLinterProps = {
   className: string;
 }
 
+type WarningGroup = {
+  title: string;
+  warnings: string[];
+};
+
 type FundiesLinterState = {
-  warningGroups: {
-    title: string;
-    warnings: string[];
-  }[] | null;
+  warningGroups: WarningGroup[] | null;
   error: string | null;
 }
 
@@ -66,13 +69,13 @@ export class FundiesLinter extends React.Component<FundiesLinterProps, FundiesLi
 
   doLint(src: string): void {
     lint(src).then(
-      (wArr) => {
+      (wArr: WarningGroup[]) => {
         this.setState({
           warningGroups: wArr,
           error: null,
         });
       },
-      (msg) => {
+      (msg: string) => {
         this.setState({
           warningGroups: null,
           error: msg,

@@ -1,6 +1,9 @@
 import React from "react";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 
+// mdx, different from React.FC
+type FunctionComponent<Props> = (props: Props) => React.JSX.Element | null;
+
 function TocTree({ entries }: { entries: Toc }) {
   return (
     <ul>
@@ -16,7 +19,7 @@ function TocTree({ entries }: { entries: Toc }) {
   );
 }
 
-export function TocCreator(tableOfContents: Toc): React.FC<{}> {
+export function TocCreator(tableOfContents: Toc): FunctionComponent<{}> {
   return () => (
     <div className="table-of-contents max-w-xs shadow-lg p-5 border-paper-dark border rounded">
       <p className="mb-0 font-bold text-sm uppercase">TABLE OF CONTENTS</p>

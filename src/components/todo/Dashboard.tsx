@@ -28,7 +28,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   if (withoutDeleted.length < selected.length) {
     setSelected(withoutDeleted);
   }
-  const handleSelect = (item, isSelected) => {
+  const handleSelect = (item: Bin, isSelected: boolean) => {
     setSelected([...selected, item].filter((e) => isSelected || e !== item));
   };
 

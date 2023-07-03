@@ -20,6 +20,7 @@ module.exports = {
         DEFAULT: 'var(--color-paper)',
         darker: 'var(--color-paper-darker)',
         dark: 'var(--color-paper-dark)',
+        secondary: 'var(--color-paper-secondary)',
       },
       pen: {
         DEFAULT: 'var(--color-pen)',

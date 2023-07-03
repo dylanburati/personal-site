@@ -24,13 +24,13 @@ export const BlogPost: React.FC<BlogPostProps> = ({ postId }) => {
   const Inner = post.default;
 
   return (
-    <Layout className="px-5" navLinks={[{ text: "Blog", href: "/blog" }]}>
-      <SEO title={post.title} />
+    <Layout className="px-5 post" navLinks={[{ text: "Blog", href: "/blog" }]}>
+      <SEO title={post.title} link={post.helmetLinks || []} />
       <div className="container mx-auto">
         <div className="my-8">
           <h1 className="mb-0">{post.title}</h1>
           <span className="text-pen-lighter">
-            {new Date(post.date).toLocaleDateString()}
+            {new Date(post.date + 'T00:00:00').toLocaleDateString()}
             <span className="px-3 text-paper-dark text-lg pb-px">|</span>
             {post.author}
           </span>

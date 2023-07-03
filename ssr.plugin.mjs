@@ -13,6 +13,7 @@ export default {
         outdir: "dist-cjs",
         platform: "node",
         format: "cjs",
+        loader: { '.css': 'empty' },
         define: {
           OUTDIR: generate({ type: 'Literal', value: build.initialOptions.outdir }),
         },

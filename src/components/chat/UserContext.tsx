@@ -58,7 +58,9 @@ export const UserContext = React.createContext<UserContextType>({
   logout: () => {},
 });
 
-export function UserProvider(props) {
+export const UserProvider: React.FC<React.PropsWithChildren<{}>> = ({
+  children,
+}) => {
   const [token, setToken] = useState(() =>
     localStorageOrDefault(tokenStoreKey, null)
   );
@@ -138,7 +140,7 @@ export function UserProvider(props) {
         logout,
       }}
     >
-      {props.children}
+      {children}
     </UserContext.Provider>
   );
-}
+};

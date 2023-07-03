@@ -89,7 +89,7 @@ export const Blog = () => {
       href: `/posts/${post.slug}`,
       title: post.title,
       subtitle: post.subtitle,
-      date: new Date(post.date),
+      date: new Date(post.date + 'T00:00:00'),
     };
   });
 

@@ -36,7 +36,7 @@ export const Home = () => {
                   <React.Fragment key={idx}>
                     <span className="text-sm border-l-2 pl-4 md:border-0 md:pl-0 md:mt-2 md:text-right">{ds}</span>
                     <div className="border-l-2 p-2 entry">
-                      <SimpleCard title={title} className="mb-3 px-4 overflow-x-scroll" markdown={true}>
+                      <SimpleCard title={title} className="mb-3 px-4 overflow-x-auto" markdown={true}>
                         <Inner />
                       </SimpleCard>
                     </div>

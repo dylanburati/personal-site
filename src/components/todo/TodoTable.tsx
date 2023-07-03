@@ -4,11 +4,12 @@ import React, {
   useCallback,
   useContext,
   useMemo,
+  KeyboardEventHandler,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'react-feather';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import TodoRow from './TodoRow';
+import { DragDropContext, DropResult, Droppable } from 'react-beautiful-dnd';
+import { TodoRow } from './TodoRow';
 import { parseCommand } from './commandParser';
 import { ChatContext } from '../chat/ChatContext';
 import { UserContext } from '../chat/UserContext';
@@ -230,9 +231,6 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     nextId: 0,
   });
   const { authHttp, user } = useContext(UserContext);
-  if (!authHttp || !user) {
-    throw new Error("TodoTable must be loaded from a logged in context");
-  }
   const { errors, isConnected, messages, sendMessage } = useContext(
     ChatContext
   );
@@ -253,7 +251,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
   const snapshots = messages.filter(m => m.target === 'todo:save' && m.content);
 
   const handleLoad = useCallback(
-    data => {
+    (data: any) => {
       const { schema: savedSchema, name, values, revisionNum } = data;
       const schema = schemas.find(e => e.name === savedSchema.name);
       if (!schema) {
@@ -328,7 +326,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, state.name, state.editCounter, sheetId]);
 
-  const handleFirstSave = useAsyncTask(async (title, nickname) => {
+  const handleFirstSave = useAsyncTask(async (title: string, nickname: string) => {
     if (!authHttp) return; // todo guest
 
     const json = await authHttp.post('/g', {
@@ -345,7 +343,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     }
   });
 
-  const handleChange = (rowIndex, colIndex, val) => {
+  const handleChange = (rowIndex: number, colIndex: number, val: string) => {
     if (state.values === null) {
       return;
     }
@@ -355,7 +353,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     dispatch({ kind: 'SET_VALUES', values: nextValues });
   };
 
-  const handleShare = useAsyncTask(async username => {
+  const handleShare = useAsyncTask(async (username: string) => {
     if (!authHttp || !sheetId) return;
 
     const json = await authHttp.post('/g/share', {
@@ -367,7 +365,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     }
   });
 
-  const onDragEnd = result => {
+  const onDragEnd = (result: DropResult) => {
     if (state.values != null && result.destination != null) {
       const src = result.source.index;
       const dst = result.destination.index;
@@ -380,19 +378,19 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
     }
   };
 
-  const handleCmdlineKey = ev => {
+  const handleUndo = () => {
+    dispatch({ kind: 'UNDO' });
+  };
+  const handleCmdlineKey: KeyboardEventHandler = (ev) => {
     if (ev.key === 'z' && ev.ctrlKey) {
       ev.preventDefault();
       handleUndo();
     } else if (ev.key === 'Enter') handleCmd(state.command);
   };
 
-  const handleUndo = () => {
-    dispatch({ kind: 'UNDO' });
-  };
   const { schema, values } = state;
 
-  const handleCmd = cmd => {
+  const handleCmd = (cmd: string) => {
     try {
       if (cmd === ':u') {
         return handleUndo();
@@ -403,7 +401,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
         row => row.slice(1).some(s => s.length > 1)
       );
       const command = parseCommand(cmd, { lastLine });
-      if (command.command === false || schema == null || values == null) {
+      if (command.command === false || schema == null || values == null || !user) {
         return;
       }
       switch (command.command) {
@@ -502,7 +500,7 @@ export const TodoTable: React.FC<TodoTableProps> = ({ handleBack, handleName }) 
                   columns={schema.columns}
                   numWidth={maxDigits * 10}
                   values={e}
-                  handleChange={(colIndex, val) =>
+                  handleChange={(colIndex: number, val: any) =>
                     handleChange(rowIndex, colIndex, val)
                   }
                 />

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import lockfile from "proper-lockfile";
 import glob from "glob";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
@@ -19,12 +20,6 @@ import { visit } from "unist-util-visit";
  */
 async function transformHtml({ outdir, basePath = "/" }, metafile) {
   const filenames = glob.sync(path.join(outdir, "**/*.html"));
-  let globAttempt = 0;
-  while (filenames.length === 0 && globAttempt < 5) {
-    globAttempt += 1;
-    await new Promise(resolve => setTimeout(resolve, 100));
-    filenames.push(...glob.sync(path.join(outdir, "**/*.html")));
-  }
   if (filenames.length === 0) {
     throw new Error("No files to transform");
   }
@@ -94,7 +89,12 @@ export default (config) => ({
   setup(build) {
     if (build.initialOptions.platform !== "node") {
       build.onEnd(async (result) => {
-        await transformHtml(config, result.metafile);
+        const unlock = await lockfile.lock(config.outdir, { retries: 30, lockfilePath: path.join(config.outdir, "dir.lock") });
+        try {
+          await transformHtml(config, result.metafile);
+        } finally {
+          await unlock();
+        }
       });
     }
   },

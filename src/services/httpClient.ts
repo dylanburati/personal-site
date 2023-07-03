@@ -7,7 +7,7 @@ export default class HttpClient {
   headers: Record<string, string>;
   responseCallbacks: ResponseCallback[];
 
-  constructor(baseUrl, headers: Record<string, string> = {}) {
+  constructor(baseUrl: string, headers: Record<string, string> = {}) {
     this.baseUrl = baseUrl;
     this.headers = headers;
     this.responseCallbacks = [];
